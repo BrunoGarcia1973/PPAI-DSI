@@ -1,4 +1,4 @@
-package dsi.ppai.Entities;
+package dsi.ppai.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,11 +12,11 @@ import java.util.Date;
 @AllArgsConstructor
 public class Sismografo {
 
-    @Getter
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "identificador_sismografo")
-    private Integer identificadorSismografo;
+    @Column(name = "id_sismografo")
+    private Integer idSismografo;
 
     @Column(name = "fecha_adquisicion")
     @Temporal(TemporalType.DATE)
