@@ -16,7 +16,7 @@ public class OrdenesDeInspeccion {
 
     private Empleado empleado; // Relacion con la clase Empleado
     private Estado estado; // Relacion con el Estado 
-    private Estacion estacion; // Relacion con la estacion
+    private EstacionSismologica estacionSismologica; // Relacion con la estacion
 
     public OrdenesDeInspeccion(int numOrden, LocalDateTime fechaHoraInicio, Empleado empleado, LocalDateTime fechaHoraCierre, String observacion, LocalDateTime fechaHoraFinalizacion, Estado estado, Estacion estacion) {
         this.numOrden = numOrden;

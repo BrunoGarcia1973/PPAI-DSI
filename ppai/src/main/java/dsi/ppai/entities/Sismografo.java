@@ -25,7 +25,7 @@ public class Sismografo {
     @Column(name = "numero_serie")
     private Integer numeroSerie;
 
-    private Estacion estacion; //Relacion con la estacion
+    private EstacionSismologica estacionSismologica; //Relacion con la estacion
     private List<CambioEstado> cambiosDeEstados; //RELACION CON CAMBIO DE ESTADO
 
     // Métodos adicionales según el diagrama
