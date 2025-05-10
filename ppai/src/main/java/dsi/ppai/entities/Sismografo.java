@@ -2,7 +2,7 @@ package dsi.ppai.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import java.util.List;
 import java.util.Date;
 
 @Entity
@@ -24,6 +24,9 @@ public class Sismografo {
 
     @Column(name = "numero_serie")
     private Integer numeroSerie;
+
+    private Estacion estacion; //Relacion con la estacion
+    private List<CambioEstado> cambiosDeEstados; //RELACION CON CAMBIO DE ESTADO
 
     // Métodos adicionales según el diagrama
 
