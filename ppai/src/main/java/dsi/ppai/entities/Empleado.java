@@ -1,6 +1,7 @@
 package dsi.ppai.entities;
 
 public class Empleado {
+    private String legajo;
     private String nombre;
     private String apellido;
     private String mail;
@@ -15,6 +16,13 @@ public class Empleado {
 
     // Metodos get y set
 
+    public String getLegajo() {
+        return legajo;
+    }
+
+    public void setLegajo(String legajo) {
+        this.legajo = legajo;
+    }
     public String getApellido() {
         return apellido;
     }

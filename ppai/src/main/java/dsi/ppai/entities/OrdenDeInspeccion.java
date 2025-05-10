@@ -1,24 +1,20 @@
 package dsi.ppai.entities;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
-import java.util.Date;
 
-public class OrdenesDeInspeccion {
+public class OrdenDeInspeccion {
 
     private LocalDateTime fechaHoraCierre;
     private LocalDateTime fechaHoraFinalizacion;
     private LocalDateTime fechaHoraInicio;
-    private int numOrden;
+    private Long numOrden;
     private String observacionCierre;
 
     private Empleado empleado; // Relacion con la clase Empleado
     private Estado estado; // Relacion con el Estado 
     private EstacionSismologica estacionSismologica; // Relacion con la estacion
 
-    public OrdenesDeInspeccion(int numOrden, LocalDateTime fechaHoraInicio, Empleado empleado, LocalDateTime fechaHoraCierre, String observacion, LocalDateTime fechaHoraFinalizacion, Estado estado, Estacion estacion) {
+    public OrdenDeInspeccion(Long numOrden, LocalDateTime fechaHoraInicio, Empleado empleado, LocalDateTime fechaHoraCierre, String observacion, LocalDateTime fechaHoraFinalizacion, Estado estado, Estacion estacion) {
         this.numOrden = numOrden;
         this.fechaHoraInicio = fechaHoraInicio;
         this.empleado = empleado;
@@ -55,11 +51,11 @@ public class OrdenesDeInspeccion {
         this.fechaHoraInicio = fechaHoraInicio;
     }
 
-    public int getNumOrden() {
+    public Long getNumOrden() {
         return numOrden;
     }
 
-    public void setNumOrden(int numOrden) {
+    public void setNumOrden(Long numOrden) {
         this.numOrden = numOrden;
     }
 

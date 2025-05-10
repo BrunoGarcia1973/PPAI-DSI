@@ -9,6 +9,10 @@ public class Estado {
         this.nombre = nombre;
     }
 
+    public Estado(String nombre){
+        this.nombre = nombre;
+    }
+
     public String getAmbito() {
         return ambito;
     }
