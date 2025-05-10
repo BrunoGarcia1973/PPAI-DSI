@@ -10,13 +10,13 @@ import java.util.Date;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Sismografo {
 
+public class Sismografo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_sismografo")
-    private Integer idSismografo;
+    private Integer SismografoId;
 
     @Column(name = "fecha_adquisicion")
     @Temporal(TemporalType.DATE)
