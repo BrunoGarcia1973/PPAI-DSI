@@ -36,22 +36,4 @@ public class EstacionSismologica {
         this.nombre = nombre;
         this.nroCertificacionAdquisicion;
     }
-
-    public Integer getEstacionId() {return estacionId;}
-
-    public String getDocumentoCertificacionAdq() {
-        return documentoCertificacionAdq;
-    }
-
-    public Date getFechaSolicitudCertificacion() {
-        return fechaSolicitudCertificacion;
-    }
-
-    public double getLatitud() {
-        return latitud;
-    }
-
-    public String getNombre() {
-        return nombre;
-    }
 }

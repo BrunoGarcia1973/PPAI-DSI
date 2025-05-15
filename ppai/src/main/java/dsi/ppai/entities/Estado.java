@@ -1,5 +1,8 @@
 package dsi.ppai.entities;
 
+import lombok.Data;
+
+@Data
 public class Estado {
     private String ambito;
     private String nombre;
