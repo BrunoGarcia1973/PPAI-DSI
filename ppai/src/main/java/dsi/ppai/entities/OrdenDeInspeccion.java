@@ -3,6 +3,7 @@ package dsi.ppai.entities;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Data;
+import lombok.Getter;
 
 @Data
 public class OrdenDeInspeccion {
@@ -10,6 +11,8 @@ public class OrdenDeInspeccion {
     private LocalDateTime fechaHoraCierre;
     private LocalDateTime fechaHoraFinalizacion;
     private LocalDateTime fechaHoraInicio;
+    // Métodos llamados por el Gestor en el primer loop:
+    @Getter
     private Long numOrden;
     private String observacionCierre;
 
@@ -38,22 +41,19 @@ public class OrdenDeInspeccion {
         return estado.sosCompletamenteRealizada();
     }
 
-    // Métodos llamados por el Gestor en el primer loop:
-    public Long getNumOrden() {
-        return numOrden;
-    }
-
     public LocalDateTime getFechaFinalizacion() {
         return fechaHoraFinalizacion;
     }
     //Delegacion para que me de el nombre de la ES
-    public String getNombreES() {
-        return estacionSismologica.getNombre();
+    public EstacionSismologica getNombreES() {
+        return this.estacionSismologica;
     }
 
     //Delegacion del identificador del sismografo
     public Integer getIdentificadorSismografo() {
         return estacionSismologica.obtenerIdentificadorSismografo();
     }
+
+
 
 }

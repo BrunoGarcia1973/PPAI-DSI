@@ -6,8 +6,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
-@Table(name = "estaciones_sismologicas")
+import java.time.LocalDate;
+
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,15 +21,17 @@ public class EstacionSismologica {
     private Integer estacionId;
 
     private String documentoCertificacionAdq;
-    private Date fechaSolicitudCertificacion;
+    private LocalDate fechaSolicitudCertificacion;
     private double latitud;
     private double longitud;
     private String nombre;
     private Long nroCertificacionAdquisicion;
+    private Sismografo sismografo;
 
 
-    public EstacionSismologica(Integer estacionIdstacionId, String documentoCertificacionAdq, Date fechaSolicitudCertificacion,
-                               double latitud, double longitud, String nombre, Long nroCertificacionAdquisicion){
+
+    public EstacionSismologica(Integer estacionIdstacionId, String documentoCertificacionAdq, LocalDate fechaSolicitudCertificacion,
+                               double latitud, double longitud, String nombre, Long nroCertificacionAdquisicion, Sismografo sismografo) {
         this.estacionId = estacionId;
         this.documentoCertificacionAdq = documentoCertificacionAdq;
         this.fechaSolicitudCertificacion = fechaSolicitudCertificacion;
@@ -36,6 +39,7 @@ public class EstacionSismologica {
         this.longitud = longitud;
         this.nombre = nombre;
         this.nroCertificacionAdquisicion = nroCertificacionAdquisicion;
+        this.sismografo = sismografo;
     }
 
     public String getNombre() {
@@ -45,7 +49,7 @@ public class EstacionSismologica {
       // Este método obtiene el identificador del sismógrafo relacionado
       //COMPLETAR no me queda claro como hacer la dependencia Entre estacion y sismografo
     public Integer obtenerIdentificadorSismografo() {
-        Sismografo sismografo = obtenerSismografoRelacionado();
-        return Sismografo sismografo.getIdentificador();
+        return this.sismografo.getIdentificador();
+
     }
 }

@@ -1,7 +1,7 @@
 package dsi.ppai.entities;
 
 public class Sesion {
-    private static Sesion instancia; // patrón singleton para sesión activa
+    public static Sesion instancia; // patrón singleton para sesión activa
     private Usuario usuarioLogueado;
 
     private Sesion() {}

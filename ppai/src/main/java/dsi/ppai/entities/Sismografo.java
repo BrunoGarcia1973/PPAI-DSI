@@ -5,26 +5,16 @@ import lombok.*;
 import java.util.List;
 import java.util.Date;
 
-@Entity
-@Table(name = "sismografos")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 
 public class Sismografo {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_sismografo")
+
     private Integer identificadorSismografo;
-
-    @Column(name = "fecha_adquisicion")
-    @Temporal(TemporalType.DATE)
     private Date fechaAdquisicion;
-
-    @Column(name = "numero_serie")
     private Integer numeroSerie;
-
     private EstacionSismologica estacionSismologica; //Relacion con la estacion
     private List<CambioEstado> cambiosDeEstados; //RELACION CON CAMBIO DE ESTADO
 
@@ -43,7 +33,7 @@ public class Sismografo {
     ////METODO GET
     
     public Integer getIdentificador() {
-        return identificadorSismografo;
+        return this.identificadorSismografo;
     }
 
 

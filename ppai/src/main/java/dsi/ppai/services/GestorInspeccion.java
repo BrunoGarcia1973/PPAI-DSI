@@ -7,6 +7,9 @@ import dsi.ppai.entities.OrdenDeInspeccion;
 import dsi.ppai.entities.Sesion;
 import dsi.ppai.repositories.RepositorioEstados;
 import dsi.ppai.repositories.RepositorioOrdenes;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,8 +17,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Scanner;
 
-
+@Data
 @Service
+@AllArgsConstructor
+@NoArgsConstructor
 public class GestorInspeccion {
 
     private RepositorioOrdenes repoOrdenes;
@@ -50,8 +55,8 @@ public class GestorInspeccion {
                 Long numero = orden.getNumOrden(); // self
                 LocalDateTime fecha = orden.getFechaFinalizacion(); // self
                 EstacionSismologica estacion = orden.getNombreES(); // self  //Esto lo que tiene que ver con dependencia
-                String nombreEstacion = estacion.getNombre(); // mensaje a EstacionSismologica
-                String identificadorSismografo = orden.getIdentificadorSismografo(); // self → mensaje a EstacionSismologica → mensaje a Sismografo
+                String nombreEstacion = estacion.getNombre(); // mensaje a EstacionaSismologica
+                Integer identificadorSismografo = orden.getIdentificadorSismografo(); // self → mensaje a EstacionSismologica → mensaje a Sismografo
                 //Esto lo que tiene que ver con dependencia, lo de arriba
             } else {
                 System.out.println("Orden INCOMPLETA encontrada: " + orden);

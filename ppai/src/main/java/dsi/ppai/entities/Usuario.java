@@ -32,4 +32,8 @@ public class Usuario {
     public Usuario() {
         // Constructor vacío
     }
+
+    public Empleado getEmpleado() {
+        return this.empleado;
+    }
 }
