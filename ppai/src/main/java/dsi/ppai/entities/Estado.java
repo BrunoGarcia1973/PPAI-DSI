@@ -31,4 +31,9 @@ public class Estado {
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
+
+    //////Me fijo si es completamenteRealizda
+    public boolean sosCompletamenteRealizada() {
+        return "CompletamenteRealizada".equalsIgnoreCase(nombre);
+    }
 }

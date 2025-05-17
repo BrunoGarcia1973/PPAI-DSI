@@ -26,14 +26,26 @@ public class EstacionSismologica {
     private String nombre;
     private Long nroCertificacionAdquisicion;
 
+
     public EstacionSismologica(Integer estacionIdstacionId, String documentoCertificacionAdq, Date fechaSolicitudCertificacion,
-                               double latitud, double longitud, String nombre, Integer nroCertificacionAdquisicion){
+                               double latitud, double longitud, String nombre, Long nroCertificacionAdquisicion){
         this.estacionId = estacionId;
         this.documentoCertificacionAdq = documentoCertificacionAdq;
         this.fechaSolicitudCertificacion = fechaSolicitudCertificacion;
         this.latitud = latitud;
         this.longitud = longitud;
         this.nombre = nombre;
-        this.nroCertificacionAdquisicion;
+        this.nroCertificacionAdquisicion = nroCertificacionAdquisicion;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+      // Este método obtiene el identificador del sismógrafo relacionado
+      //COMPLETAR no me queda claro como hacer la dependencia Entre estacion y sismografo
+    public Integer obtenerIdentificadorSismografo() {
+        Sismografo sismografo = obtenerSismografoRelacionado();
+        return Sismografo sismografo.getIdentificador();
     }
 }
