@@ -16,7 +16,7 @@ public class Sismografo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_sismografo")
-    private Integer SismografoId;
+    private Integer identificadorSismografo;
 
     @Column(name = "fecha_adquisicion")
     @Temporal(TemporalType.DATE)
@@ -25,8 +25,10 @@ public class Sismografo {
     @Column(name = "numero_serie")
     private Integer numeroSerie;
 
-    private Estacion estacion; //Relacion con la estacion
+    private EstacionSismologica estacionSismologica; //Relacion con la estacion
     private List<CambioEstado> cambiosDeEstados; //RELACION CON CAMBIO DE ESTADO
+
+
 
     // Métodos adicionales según el diagrama
 
@@ -37,4 +39,12 @@ public class Sismografo {
         // Implementación del estado actual
         return "Estado actual del sismógrafo";
     }
+
+    ////METODO GET
+    
+    public Integer getIdentificador() {
+        return identificadorSismografo;
+    }
+
+
 }

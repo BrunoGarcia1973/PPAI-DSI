@@ -1,7 +1,10 @@
 package dsi.ppai.entities;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Data;
 
+@Data
 public class OrdenDeInspeccion {
 
     private LocalDateTime fechaHoraCierre;
@@ -12,9 +15,9 @@ public class OrdenDeInspeccion {
 
     private Empleado empleado; // Relacion con la clase Empleado
     private Estado estado; // Relacion con el Estado 
-    private Estacion estacion; // Relacion con la estacion
+    private EstacionSismologica estacionSismologica; // Relacion con la estacion
 
-    public OrdenDeInspeccion(Long numOrden, LocalDateTime fechaHoraInicio, Empleado empleado, LocalDateTime fechaHoraCierre, String observacion, LocalDateTime fechaHoraFinalizacion, Estado estado, Estacion estacion) {
+    public OrdenDeInspeccion(Long numOrden, LocalDateTime fechaHoraInicio, Empleado empleado, LocalDateTime fechaHoraCierre, String observacion, LocalDateTime fechaHoraFinalizacion, Estado estado, EstacionSismologica estacion) {
         this.numOrden = numOrden;
         this.fechaHoraInicio = fechaHoraInicio;
         this.empleado = empleado;
@@ -22,73 +25,35 @@ public class OrdenDeInspeccion {
         this.observacionCierre = observacion;
         this.fechaHoraFinalizacion = fechaHoraFinalizacion;
         this.estado = estado;
-        this.estacion = estacion;
+        this.estacionSismologica = estacion;
     }
 
-    // Metodos get y set
-
-    public LocalDateTime getFechaHoraCierre() {
-        return fechaHoraCierre;
+    ///Me fijo asi es de empleado 
+    public boolean sosDeEmpleado(Empleado empleado) {
+        return this.empleado.equals(empleado);
     }
 
-    public void setFechaHoraCierre(LocalDateTime fechaHoraCierre) {
-        this.fechaHoraCierre = fechaHoraCierre;
+    ///Me fijo si es completamenteRealizada
+    public boolean sosCompletamenteRealizado() {
+        return estado.sosCompletamenteRealizada();
     }
 
-    public LocalDateTime getFechaHoraFinalizacion() {
-        return fechaHoraFinalizacion;
-    }
-
-    public void setFechaHoraFinalizacion(LocalDateTime fechaHoraFinalizacion) {
-        this.fechaHoraFinalizacion = fechaHoraFinalizacion;
-    }
-
-    public LocalDateTime getFechaHoraInicio() {
-        return fechaHoraInicio;
-    }
-
-    public void setFechaHoraInicio(LocalDateTime fechaHoraInicio) {
-        this.fechaHoraInicio = fechaHoraInicio;
-    }
-
+    // Métodos llamados por el Gestor en el primer loop:
     public Long getNumOrden() {
         return numOrden;
     }
 
-    public void setNumOrden(Long numOrden) {
-        this.numOrden = numOrden;
+    public LocalDateTime getFechaFinalizacion() {
+        return fechaHoraFinalizacion;
+    }
+    //Delegacion para que me de el nombre de la ES
+    public String getNombreES() {
+        return estacionSismologica.getNombre();
     }
 
-    public String getObservacionCierre() {
-        return observacionCierre;
-    }
-
-    public void setObservacionCierre(String observacionCierre) {
-        this.observacionCierre = observacionCierre;
-    }
-
-    public Empleado getEmpleado() {
-        return empleado;
-    }
-
-    public void setEmpleado(Empleado empleado) {
-        this.empleado = empleado;
-    }
-
-    public Estado getEstado() {
-        return estado;
-    }
-
-    public void setEstado(Estado estado) {
-        this.estado = estado;
-    }
-
-    public Estacion getEstacion() {
-        return estacion;
-    }
-
-    public void setEstacion(Estacion estacion) {
-        this.estacion = estacion;
+    //Delegacion del identificador del sismografo
+    public Integer getIdentificadorSismografo() {
+        return estacionSismologica.obtenerIdentificadorSismografo();
     }
 
 }

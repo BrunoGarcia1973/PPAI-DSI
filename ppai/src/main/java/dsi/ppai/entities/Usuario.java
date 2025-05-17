@@ -6,7 +6,7 @@ public class Usuario {
 
     // Constructor, getters y setters
 
-    public Empleado getEmpleado() {
+    public Empleado obtenerEmpleado() {
         return empleado;
     }
 
@@ -26,6 +26,8 @@ public class Usuario {
         this.nombreUsuario = nombreUsuario;
         this.empleado = empleado;
     }
+
+    
 
     public Usuario() {
         // Constructor vacío

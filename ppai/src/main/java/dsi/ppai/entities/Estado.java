@@ -1,5 +1,8 @@
 package dsi.ppai.entities;
 
+import lombok.Data;
+
+@Data
 public class Estado {
     private String ambito;
     private String nombre;
@@ -27,5 +30,10 @@ public class Estado {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
+    }
+
+    //////Me fijo si es completamenteRealizda
+    public boolean sosCompletamenteRealizada() {
+        return "CompletamenteRealizada".equalsIgnoreCase(nombre);
     }
 }
