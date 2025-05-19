@@ -2,6 +2,7 @@ package dsi.ppai.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -80,4 +81,9 @@ public class CambioEstado {
     public Boolean esEstadoActual() {
         return this.fechaHoraFin == null;
     }
+    @Getter
+    private List<MotivoTipo> motivos;
+
+// ...
+
 }

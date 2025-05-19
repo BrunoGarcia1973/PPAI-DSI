@@ -14,12 +14,16 @@ public class RepositorioEstados {
     public RepositorioEstados() {
         // Simulación de estados predefinidos
         estados.put("PENDIENTE", new Estado("PENDIENTE"));
-        estados.put("REALIZADA", new Estado("REALIZADA"));
+        estados.put("CompletamenteRealizada", new Estado("CompletamenteRealizada"));
         estados.put("CERRADA", new Estado("CERRADA"));
         estados.put("FUERA DE SERVICIO", new Estado("FUERA DE SERVICIO"));
     }
 
     public Estado buscarEstado(String nombre) {
         return estados.get(nombre);
+    }
+
+    public void insertar(Estado estado) {
+        estados.put(estado.getNombre(), estado);
     }
 }

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,23 +22,20 @@ public class GestorInspeccion {
 
     private final RepositorioOrdenes repoOrdenes;
     private final RepositorioEstados repoEstados;
-
-    // Se elimina "final" para que la sesión pueda actualizarse mediante setter
-    private Sesion sesion;
-
+    private final Sesion sesion;
     /**
      * Busca las órdenes de inspección del RI que están COMPLETAMENTE realizadas.
      */
-    public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
+    public void buscarOrdenesInspeccionDeRI() {
         // 1) Obtengo el empleado logueado desde la sesión
         Empleado empleado = sesion.obtenerEmpleado();
 
         // 2) Pido al repositorio las órdenes de ese RI y filtro las completadas
-        return repoOrdenes
+        repoOrdenes
                 .buscarOrdenesInspeccionDeRI(empleado.getLegajo())
                 .stream()
                 .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -89,7 +85,7 @@ public class GestorInspeccion {
         );
         orden.registrarCambioEstado(cambio);
 
-        repoOrdenes.add(orden);
+        repoOrdenes.insertar(orden);
     }
 
     public Empleado obtenerEmpleadoLogueado() {

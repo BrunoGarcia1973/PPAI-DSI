@@ -29,15 +29,17 @@ public class OrdenDeInspeccion {
         this.estacionSismologica = estacion;
     }
 
+    public OrdenDeInspeccion(Long numeroOrden, Empleado empleado) {
+        this.numOrden = numeroOrden;
+        this.empleado = empleado;
+    }
+
+
     ///Me fijo asi es de empleado 
     public boolean sosDeEmpleado(Empleado empleado) {
         return this.empleado.equals(empleado);
     }
 
-    ///Me fijo si es completamenteRealizada
-    public boolean sosCompletamenteRealizado() {
-        return estado.sosCompletamenteRealizada();
-    }
 
     public LocalDateTime getFechaFinalizacion() {
         return fechaHoraFinalizacion;
@@ -54,8 +56,9 @@ public class OrdenDeInspeccion {
 
 
     public boolean sosCompletamenteRealizada() {
-        return true;
+        return estado != null && estado.sosCompletamenteRealizada();
     }
+
 
     public void ponerFueraDeServicio(List<MotivoTipo> motivosSeleccionados) {
         // 1) Crear el nuevo estado
@@ -80,6 +83,15 @@ public class OrdenDeInspeccion {
         if (sismografo != null) {
             sismografo.marcarFueraDeServicio(motivosSeleccionados);
         }
+
+    }
+    public List<MotivoTipo> getMotivos() {
+        if (cambios.isEmpty()) {
+            return List.of(); // lista vacía si no hay cambios
+        }
+
+        CambioEstado ultimoCambio = cambios.get(cambios.size() - 1);
+        return ultimoCambio.getMotivos();
     }
 
     public void registrarCambioEstado(CambioEstado cambio) {

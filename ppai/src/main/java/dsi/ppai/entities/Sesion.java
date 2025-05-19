@@ -1,6 +1,12 @@
 package dsi.ppai.entities;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
-@Component                // Se registra como bean de Spring
+@Component
+@NoArgsConstructor
+@Data
+
+// Se registra como bean de Spring
 public class Sesion {
     private Usuario usuarioLogueado;
 
