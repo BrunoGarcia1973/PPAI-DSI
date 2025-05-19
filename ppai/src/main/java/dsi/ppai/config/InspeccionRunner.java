@@ -179,7 +179,6 @@ public class InspeccionRunner implements CommandLineRunner {
             System.out.println("Cierre de orden cancelado.");
 
         }
-
         scanner.close();
     }
 }
