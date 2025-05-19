@@ -4,7 +4,10 @@ import dsi.ppai.entities.OrdenDeInspeccion;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Component
 public class RepositorioOrdenes {
@@ -15,7 +18,32 @@ public class RepositorioOrdenes {
         ordenes.put(orden.getNumOrden(), orden);
     }
 
-    public OrdenDeInspeccion buscarOrdenesInspeccion(Long numOrden) {
-        return ordenes.get(numOrden);
+    public OrdenDeInspeccion buscarOrdenDeInspeccion(Long numeroOrden) {
+        return ordenes.get(numeroOrden);
+    }
+
+    public List<OrdenDeInspeccion> obtenerTodasLasOrdenes() {
+        return List.copyOf(ordenes.values());
+    }
+
+    /**
+     * Nombre según diagrama: buscarOrdenesInspeccionDeRI
+     * Filtra en memoria las órdenes cuyo empleado-RI (o “responsableInspeccion”)
+     * tenga el legajo dado.
+     */
+    public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI(String legajo) {
+        return ordenes.values()
+                .stream()
+                .filter(o -> Objects.equals(o.getEmpleado().getLegajo(), legajo))
+                .collect(Collectors.toList());
+    }
+
+    public void add(OrdenDeInspeccion orden) {
+        // Verifica si la orden ya existe
+        if (ordenes.containsKey(orden.getNumOrden())) {
+            throw new IllegalArgumentException("La orden ya existe: " + orden.getNumOrden());
+        }
+        // Agrega la nueva orden
+        ordenes.put(orden.getNumOrden(), orden);
     }
 }

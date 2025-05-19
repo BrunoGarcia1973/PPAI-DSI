@@ -1,131 +1,101 @@
 package dsi.ppai.services;
+
+import dsi.ppai.entities.CambioEstado;
 import dsi.ppai.entities.Empleado;
-import dsi.ppai.entities.EstacionSismologica;
 import dsi.ppai.entities.Estado;
 import dsi.ppai.entities.MotivoTipo;
 import dsi.ppai.entities.OrdenDeInspeccion;
 import dsi.ppai.entities.Sesion;
 import dsi.ppai.repositories.RepositorioEstados;
 import dsi.ppai.repositories.RepositorioOrdenes;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Scanner;
+import java.util.stream.Collectors;
 
-@Data
 @Service
-@AllArgsConstructor
-@NoArgsConstructor
+@RequiredArgsConstructor
+@Data
 public class GestorInspeccion {
 
-    private RepositorioOrdenes repoOrdenes;
-    private RepositorioEstados repoEstados;
-    private Sesion sesionActual;
-    private Empleado empleadoLogueado;
-    private List<OrdenDeInspeccion> ordenesDeInspeccion;
+    private final RepositorioOrdenes repoOrdenes;
+    private final RepositorioEstados repoEstados;
 
-    ////////////////////////////CONSTRUCTOR/////////////////////////////////////
-    public GestorInspeccion(RepositorioOrdenes repoOrdenes, RepositorioEstados repoEstados) {
-        this.repoOrdenes = repoOrdenes;
-        this.repoEstados = repoEstados;
+    // Se elimina "final" para que la sesión pueda actualizarse mediante setter
+    private Sesion sesion;
+
+    /**
+     * Busca las órdenes de inspección del RI que están COMPLETAMENTE realizadas.
+     */
+    public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
+        // 1) Obtengo el empleado logueado desde la sesión
+        Empleado empleado = sesion.obtenerEmpleado();
+
+        // 2) Pido al repositorio las órdenes de ese RI y filtro las completadas
+        return repoOrdenes
+                .buscarOrdenesInspeccionDeRI(empleado.getLegajo())
+                .stream()
+                .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
+                .collect(Collectors.toList());
     }
 
-    ///////OBTENER EL USUARIO
-    // Método privado porque solo se llama una vez internamente
-    private Empleado obtenerEmpleadoLogueado() {
-        return sesionActual.obtenerEmpleadoLogueado();
-    }
+    /**
+     * Cierra la orden con los datos provistos, marcando la estación y los sismógrafos
+     * fuera de servicio, cambiando el estado, registrando el cambio y notificando.
+     */
+    public void cerrarOrden(Long numeroOrden,
+                            String observacion,
+                            List<MotivoTipo> motivosSeleccionados) {
+        // 1) Recupero el empleado logueado
+        Empleado empleado = sesion.obtenerEmpleado();
 
-    // Método público para acceder al empleado si hiciera falta
-    public Empleado getEmpleadoLogueado() {
-        return empleadoLogueado;
-    }
-    ////////////////////////////////////////////////////////
-    
-    ///BUSCAR las ordenes de inspeccion del RI
-    public void buscarOrdenesInspeccionDeRI() {
-        for (OrdenDeInspeccion orden : ordenesDeInspeccion) {
-        if (orden.sosDeEmpleado(empleadoLogueado)) {
-            if (orden.sosCompletamenteRealizado()) { //Si es Completamente realizada pido los datos
-                Long numero = orden.getNumOrden(); // self
-                LocalDateTime fecha = orden.getFechaFinalizacion(); // self
-                EstacionSismologica estacion = orden.getNombreES(); // self  //Esto lo que tiene que ver con dependencia
-                String nombreEstacion = estacion.getNombre(); // mensaje a EstacionaSismologica
-                Integer identificadorSismografo = orden.getIdentificadorSismografo(); // self → mensaje a EstacionSismologica → mensaje a Sismografo
-                //Esto lo que tiene que ver con dependencia, lo de arriba
-            } else {
-                System.out.println("Orden INCOMPLETA encontrada: " + orden);
-            }
-        }
-    }
-}
-
-    ///SIGUIENTE PASO ORDENAR
-    
-    
-
-
-
-    public void cerrarOrden(Long numeroOrden, String observacion, List<MotivoTipo> motivosSeleccionados) {
-        Empleado empleado = Sesion.getInstancia().obtenerEmpleado();
-
-        // Buscar la orden
-        OrdenDeInspeccion orden = repoOrdenes.buscarOrdenesInspeccion(numeroOrden);
+        // 2) Busco la orden
+        OrdenDeInspeccion orden = repoOrdenes.buscarOrdenDeInspeccion(numeroOrden);
         if (orden == null) {
-            throw new IllegalArgumentException("La orden no existe.");
+            throw new IllegalArgumentException("La orden no existe: " + numeroOrden);
         }
 
-        // Validar que pertenezca al empleado
+        // 3) Validaciones de pertenencia y estado
         if (!orden.sosDeEmpleado(empleado)) {
             throw new IllegalStateException("La orden no pertenece al empleado logueado.");
         }
-
-        // Validar que esté realizada
         if (!orden.sosCompletamenteRealizada()) {
-            throw new IllegalStateException("La orden no fue completamente realizada.");
+            throw new IllegalStateException("La orden no está totalmente realizada.");
         }
-
-        // Validar que haya observación
         if (observacion == null || observacion.isBlank()) {
-            throw new IllegalArgumentException("Debe ingresar una observación.");
+            throw new IllegalArgumentException("Debe ingresar una observación para el cierre.");
         }
 
-        // Establecer datos de cierre
+        // 4) Completar datos de cierre
         orden.setFechaHoraCierre(LocalDateTime.now());
         orden.setObservacionCierre(observacion);
-
-        // Marcar estación y sismógrafos como fuera de servicio
         orden.ponerFueraDeServicio(motivosSeleccionados);
 
-        // Cambiar estado de la orden
+        // 5) Cambiar el estado a CERRADA y registrar el cambio
         Estado estadoCerrada = repoEstados.buscarEstado("CERRADA");
+        Estado estadoAnterior = orden.getEstado();
         orden.setEstado(estadoCerrada);
 
-        // Registrar cambio de estado
-        CambioEstadoOrden cambio = new CambioEstadoOrden(estadoCerrada, LocalDateTime.now(), motivosSeleccionados);
+        CambioEstado cambio = new CambioEstado(
+                empleado,
+                estadoAnterior,
+                estadoCerrada,
+                LocalDateTime.now(),
+                null, // La fechaHoraFin se asigna al cerrar el cambio
+                motivosSeleccionados
+        );
         orden.registrarCambioEstado(cambio);
 
-        // Notificar responsables
-        List<Empleado> responsables = orden.buscarResponsablesDeReparacion();
-        for (Empleado e : responsables) {
-            Notificador.enviarCorreo(e.getEmail(), "Se cerró una orden con intervención requerida.");
+        repoOrdenes.add(orden);
+    }
+
+    public Empleado obtenerEmpleadoLogueado() {
+        if (sesion == null) {
+            throw new IllegalStateException("No hay sesión activa.");
         }
-
-        // Guardar cambios (si aplica)
-        repoOrdenes.guardar(orden);
+        return sesion.obtenerEmpleado();
     }
-
-    public static String seleccionOI(){
-        Scanner sc = new Scanner(System.in);
-        Long seleccion = sc.nextLong();
-        String response = String.valueOf(seleccion);
-        return response;
-    }
-
-
 }

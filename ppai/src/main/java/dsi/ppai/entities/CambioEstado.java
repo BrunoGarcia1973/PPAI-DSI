@@ -1,67 +1,83 @@
 package dsi.ppai.entities;
-import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Representa el cambio de estado de una OrdenDeInspeccion,
+ * incluyendo el estado anterior, el nuevo estado, timestamps y motivos.
+ */
+@Data
 
 public class CambioEstado {
-    private LocalDateTime fechaHoraInicio;
+    private final Empleado empleado;
+    private final Estado estadoAnterior;
+    private final Estado estadoNuevo;
+    private final LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
+    private final List<MotivoTipo> motivosSeleccionados;
 
-    private Empleado empleado;
-    private List<MotivoFueraServicio> motivoFueraDeServicio;
-    private Estado estado;
-
-    public CambioEstado(Empleado empleado, Estado estado, LocalDateTime fechaHoraFin, LocalDateTime fechaHoraInicio, List<MotivoFueraServicio> motivoFueraDeServicio) {
+    /**
+     * Constructor completo. Fecha de fin puede ser null si el cambio está activo.
+     */
+    public CambioEstado(
+            Empleado empleado,
+            Estado estadoAnterior,
+            Estado estadoNuevo,
+            LocalDateTime fechaHoraInicio,
+            LocalDateTime fechaHoraFin,
+            List<MotivoTipo> motivosSeleccionados
+    ) {
         this.empleado = empleado;
-        this.estado = estado;
-        this.fechaHoraFin = fechaHoraFin;
+        this.estadoAnterior = estadoAnterior;
+        this.estadoNuevo = estadoNuevo;
         this.fechaHoraInicio = fechaHoraInicio;
-        this.motivoFueraDeServicio = motivoFueraDeServicio;
-    }
-
-    // Metodos get y set
-
-    public Empleado getEmpleado() {
-        return empleado;
-    }
-
-    public void setEmpleado(Empleado empleado) {
-        this.empleado = empleado;
-    }
-
-    public Estado getEstado() {
-        return estado;
-    }
-
-    public void setEstado(Estado estado) {
-        this.estado = estado;
-    }
-
-    public LocalDateTime getFechaHoraFin() {
-        return fechaHoraFin;
-    }
-
-    public void setFechaHoraFin(LocalDateTime fechaHoraFin) {
         this.fechaHoraFin = fechaHoraFin;
+        this.motivosSeleccionados = motivosSeleccionados;
     }
 
-    public LocalDateTime getFechaHoraInicio() {
-        return fechaHoraInicio;
+    /**
+     * Factory method para crear un cambio de estado "FueraDeServicio".
+     * - El estadoNuevo se obtiene de una constante o enum en Estado.
+     * - La fechaHoraInicio se fija a ahora.
+     * - La fechaHoraFin queda null hasta que se cierre el cambio.
+     */
+    public static CambioEstado createFueraDeServicio(
+            Empleado empleado,
+            Estado estadoAnterior,
+            List<MotivoTipo> motivos
+    ) {
+        Estado nuevo = new Estado("FueraDeServicio");
+        return new CambioEstado(
+                empleado,
+                estadoAnterior,
+                nuevo,
+                LocalDateTime.now(),
+                null,
+                motivos
+        );
     }
 
-    public void setFechaHoraInicio(LocalDateTime fechaHoraInicio) {
-        this.fechaHoraInicio = fechaHoraInicio;
+
+    /**
+     * Marca este cambio como cerrado, fijando la fechaHoraFin al instante actual.
+     */
+    public void cerrarCambio() {
+        this.fechaHoraFin = LocalDateTime.now();
     }
 
-    public List<MotivoFueraServicio> getMotivoFueraDeServicio() {
-        return motivoFueraDeServicio;
+    /**
+     * Devuelve true si el cambio aún no fue cerrado (fechaHoraFin == null).
+     */
+    public boolean esCambioActivo() {
+        return this.fechaHoraFin == null;
     }
 
-    public void setMotivoFueraDeServicio(List<MotivoFueraServicio> motivoFueraDeServicio) {
-        this.motivoFueraDeServicio = motivoFueraDeServicio;
-    }
-
-    //METODO PARA VER EL ESTADO ACTUAL
-    public boolean esEstadoActual() {
-        return fechaHoraFin == null;
+    public Boolean esEstadoActual() {
+        return this.fechaHoraFin == null;
     }
 }

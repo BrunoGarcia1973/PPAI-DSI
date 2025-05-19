@@ -2,39 +2,63 @@ package dsi.ppai.entities;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.List;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class Sismografo {
 
 
     private Integer identificadorSismografo;
-    private Date fechaAdquisicion;
-    private Integer numeroSerie;
-    private EstacionSismologica estacionSismologica; //Relacion con la estacion
-    private List<CambioEstado> cambiosDeEstados; //RELACION CON CAMBIO DE ESTADO
 
+    private LocalDate fechaAdquisicion;
+    private Integer nroSerie;
+    private EstacionSismologica estacionSismologica;
+    private List<CambioEstado> cambiosDeEstados = new ArrayList<>();
 
+    // Métodos adicionales
 
-    // Métodos adicionales según el diagrama
-
-    // El método new() sería el constructor, que ya está cubierto por @NoArgsConstructor y @AllArgsConstructor
-
-    // Método serEstadoActual() - necesitarías implementar la lógica específica
-    public String serEstadoActual() {
-        // Implementación del estado actual
-        return "Estado actual del sismógrafo";
+    public boolean tieneEstadoActual() {
+        return cambiosDeEstados.stream().anyMatch(CambioEstado::esEstadoActual);
     }
 
-    ////METODO GET
-    
-    public Integer getIdentificador() {
-        return this.identificadorSismografo;
+
+
+
+public void marcarFueraDeServicio(List<MotivoTipo> motivosSeleccionados) {
+    // 1) Obtener el cambio de estado actual (aquel que no tiene fecha de fin)
+    CambioEstado cambioActual = cambiosDeEstados.stream()
+            .filter(CambioEstado::esEstadoActual)
+            .findFirst()
+            .orElse(null);
+
+    if (cambioActual != null) {
+        // 2) Finalizar el cambio de estado actual
+        cambioActual.setFechaHoraFin(LocalDateTime.now());
     }
 
+    // 3) Crear el nuevo estado 'FueraDeServicio'
+    Estado estadoFueraServicio = new Estado("FueraDeServicio");
+
+    // 4) Crear un nuevo CambioEstado con el nuevo estado
+    CambioEstado nuevoCambio = new CambioEstado(
+            cambioActual != null ? cambioActual.getEmpleado() : null, // delegación segura
+            cambioActual != null ? cambioActual.getEstadoAnterior() : null,
+            estadoFueraServicio,
+            LocalDateTime.now(), // fecha de inicio ahora
+            null,       // sin fecha de fin, porque es el estado actual
+            motivosSeleccionados
+    );
+
+    // 5) Registrar el nuevo cambio de estado
+    cambiosDeEstados.add(nuevoCambio);
+}
 
 }

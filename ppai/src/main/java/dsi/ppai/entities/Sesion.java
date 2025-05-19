@@ -1,26 +1,24 @@
 package dsi.ppai.entities;
-
+import org.springframework.stereotype.Component;
+@Component                // Se registra como bean de Spring
 public class Sesion {
-    public static Sesion instancia; // patrón singleton para sesión activa
     private Usuario usuarioLogueado;
 
-    private Sesion() {}
-
-    public static Sesion getInstancia() {
-        if (instancia == null) {
-            instancia = new Sesion();
-        }
-        return instancia;
+    public Sesion(Usuario usuario) {
+        this.usuarioLogueado = usuario; // ¡Aquí asignamos el usuario!
     }
 
+    /** Inyecta el usuario tras el login */
     public void setUsuarioLogueado(Usuario usuario) {
         this.usuarioLogueado = usuario;
     }
 
+    /** Devuelve el usuario actualmente logueado */
     public Usuario getUsuarioLogueado() {
         return usuarioLogueado;
     }
 
+    /** Devuelve el Empleado asociado al usuario logueado */
     public Empleado obtenerEmpleado() {
         if (usuarioLogueado == null) {
             throw new IllegalStateException("No hay un usuario logueado.");

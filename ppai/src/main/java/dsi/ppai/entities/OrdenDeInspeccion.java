@@ -1,10 +1,8 @@
 package dsi.ppai.entities;
-
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
-import lombok.Getter;
-
 @Data
 public class OrdenDeInspeccion {
 
@@ -12,13 +10,13 @@ public class OrdenDeInspeccion {
     private LocalDateTime fechaHoraFinalizacion;
     private LocalDateTime fechaHoraInicio;
     // Métodos llamados por el Gestor en el primer loop:
-    @Getter
     private Long numOrden;
     private String observacionCierre;
 
     private Empleado empleado; // Relacion con la clase Empleado
     private Estado estado; // Relacion con el Estado 
     private EstacionSismologica estacionSismologica; // Relacion con la estacion
+    private List<CambioEstado> cambios = new ArrayList<>();
 
     public OrdenDeInspeccion(Long numOrden, LocalDateTime fechaHoraInicio, Empleado empleado, LocalDateTime fechaHoraCierre, String observacion, LocalDateTime fechaHoraFinalizacion, Estado estado, EstacionSismologica estacion) {
         this.numOrden = numOrden;
@@ -55,5 +53,37 @@ public class OrdenDeInspeccion {
     }
 
 
+    public boolean sosCompletamenteRealizada() {
+        return true;
+    }
 
+    public void ponerFueraDeServicio(List<MotivoTipo> motivosSeleccionados) {
+        // 1) Crear el nuevo estado
+        Estado nuevoEstado = new Estado("FueraDeServicio");
+        LocalDateTime ahora = LocalDateTime.now();
+
+        // 2) Crear y registrar el cambio de estado
+        CambioEstado cambio = new CambioEstado(
+                this.empleado,
+                this.estado,
+                nuevoEstado,
+                null, // fechaInicio (puede omitirse o usarse según tu modelo)
+                ahora,
+                motivosSeleccionados
+        );
+
+        this.estado = nuevoEstado;
+        registrarCambioEstado(cambio);
+
+        // 3) Inhabilitar el sismógrafo asociado
+        Sismografo sismografo = estacionSismologica.getSismografo();
+        if (sismografo != null) {
+            sismografo.marcarFueraDeServicio(motivosSeleccionados);
+        }
+    }
+
+    public void registrarCambioEstado(CambioEstado cambio) {
+        this.cambios.add(cambio);
+    }
 }
+

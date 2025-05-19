@@ -1,5 +1,8 @@
 package dsi.ppai.entities;
 
+import org.springframework.stereotype.Component;
+
+@Component
 public class Usuario {
     private String nombreUsuario;
     private Empleado empleado;
