@@ -3,8 +3,6 @@ package dsi.ppai.entities;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -20,7 +18,7 @@ public class CambioEstado {
     private final Estado estadoNuevo;
     private final LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
-    private final List<MotivoTipo> motivosSeleccionados;
+    private final List<MotivoFueraServicio> motivosSeleccionados;
 
     /**
      * Constructor completo. Fecha de fin puede ser null si el cambio está activo.
@@ -31,7 +29,7 @@ public class CambioEstado {
             Estado estadoNuevo,
             LocalDateTime fechaHoraInicio,
             LocalDateTime fechaHoraFin,
-            List<MotivoTipo> motivosSeleccionados
+            List<MotivoFueraServicio> motivosSeleccionados
     ) {
         this.empleado = empleado;
         this.estadoAnterior = estadoAnterior;
@@ -50,7 +48,7 @@ public class CambioEstado {
     public static CambioEstado createFueraDeServicio(
             Empleado empleado,
             Estado estadoAnterior,
-            List<MotivoTipo> motivos
+            List<MotivoFueraServicio> motivosFueraServicio
     ) {
         Estado nuevo = new Estado("FueraDeServicio");
         return new CambioEstado(
@@ -59,7 +57,8 @@ public class CambioEstado {
                 nuevo,
                 LocalDateTime.now(),
                 null,
-                motivos
+                motivosFueraServicio
+
         );
     }
 

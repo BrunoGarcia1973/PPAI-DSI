@@ -17,13 +17,10 @@ public class RepositorioEstados {
         estados.put("CompletamenteRealizada", new Estado("CompletamenteRealizada"));
         estados.put("CERRADA", new Estado("CERRADA"));
         estados.put("FUERA DE SERVICIO", new Estado("FUERA DE SERVICIO"));
+        estados.put("ABIERTA", new Estado("ABIERTA"));
     }
 
     public Estado buscarEstado(String nombre) {
         return estados.get(nombre);
-    }
-
-    public void insertar(Estado estado) {
-        estados.put(estado.getNombre(), estado);
     }
 }

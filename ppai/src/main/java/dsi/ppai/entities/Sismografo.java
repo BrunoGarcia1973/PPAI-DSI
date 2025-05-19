@@ -1,23 +1,20 @@
 package dsi.ppai.entities;
 
-import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class Sismografo {
 
 
     private Integer identificadorSismografo;
-
     private LocalDate fechaAdquisicion;
     private Integer nroSerie;
     private EstacionSismologica estacionSismologica;
@@ -32,7 +29,7 @@ public class Sismografo {
 
 
 
-public void marcarFueraDeServicio(List<MotivoTipo> motivosSeleccionados) {
+public void marcarFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados) {
     // 1) Obtener el cambio de estado actual (aquel que no tiene fecha de fin)
     CambioEstado cambioActual = cambiosDeEstados.stream()
             .filter(CambioEstado::esEstadoActual)

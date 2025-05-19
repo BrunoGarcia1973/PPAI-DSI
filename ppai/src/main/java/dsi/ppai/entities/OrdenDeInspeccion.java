@@ -60,9 +60,9 @@ public class OrdenDeInspeccion {
     }
 
 
-    public void ponerFueraDeServicio(List<MotivoTipo> motivosSeleccionados) {
+    public void ponerFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados) {
         // 1) Crear el nuevo estado
-        Estado nuevoEstado = new Estado("FueraDeServicio");
+        Estado nuevoEstado = new Estado("Orden de Inspeccion","FueraDeServicio");
         LocalDateTime ahora = LocalDateTime.now();
 
         // 2) Crear y registrar el cambio de estado

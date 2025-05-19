@@ -1,11 +1,6 @@
 package dsi.ppai.services;
 
-import dsi.ppai.entities.CambioEstado;
-import dsi.ppai.entities.Empleado;
-import dsi.ppai.entities.Estado;
-import dsi.ppai.entities.MotivoTipo;
-import dsi.ppai.entities.OrdenDeInspeccion;
-import dsi.ppai.entities.Sesion;
+import dsi.ppai.entities.*;
 import dsi.ppai.repositories.RepositorioEstados;
 import dsi.ppai.repositories.RepositorioOrdenes;
 import lombok.Data;
@@ -44,7 +39,7 @@ public class GestorInspeccion {
      */
     public void cerrarOrden(Long numeroOrden,
                             String observacion,
-                            List<MotivoTipo> motivosSeleccionados) {
+                            List<MotivoFueraServicio> motivosSeleccionados) {
         // 1) Recupero el empleado logueado
         Empleado empleado = sesion.obtenerEmpleado();
 
@@ -84,6 +79,7 @@ public class GestorInspeccion {
                 motivosSeleccionados
         );
         orden.registrarCambioEstado(cambio);
+
 
         repoOrdenes.insertar(orden);
     }
