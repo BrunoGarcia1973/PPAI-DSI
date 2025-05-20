@@ -60,30 +60,30 @@ public class OrdenDeInspeccion {
     }
 
 
+
     public void ponerFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados) {
-        // 1) Crear el nuevo estado
-        Estado nuevoEstado = new Estado("Orden de Inspeccion","FueraDeServicio");
+        // 1) Crear el nuevo estado para la ORDEN (opcional)
+        Estado nuevoEstadoOrden = new Estado("Orden de Inspeccion", "CERRADA_FUERA_DE_SERVICIO");
         LocalDateTime ahora = LocalDateTime.now();
 
-        // 2) Crear y registrar el cambio de estado
-        CambioEstado cambio = new CambioEstado(
+        // 2) Crear y registrar el cambio de estado de la ORDEN (opcional)
+        CambioEstado cambioOrden = new CambioEstado(
                 this.empleado,
                 this.estado,
-                nuevoEstado,
-                null, // fechaInicio (puede omitirse o usarse según tu modelo)
+                nuevoEstadoOrden,
                 ahora,
+                null,
                 motivosSeleccionados
         );
+        this.estado = nuevoEstadoOrden;
+        registrarCambioEstado(cambioOrden);
 
-        this.estado = nuevoEstado;
-        registrarCambioEstado(cambio);
-
-        // 3) Inhabilitar el sismógrafo asociado
+        // 3) Obtener el sismógrafo asociado
         Sismografo sismografo = estacionSismologica.getSismografo();
         if (sismografo != null) {
+            // 4) Llamar al método de Sismografo para marcarlo fuera de servicio
             sismografo.marcarFueraDeServicio(motivosSeleccionados);
         }
-
     }
     public List<MotivoTipo> getMotivos() {
         if (cambios.isEmpty()) {
