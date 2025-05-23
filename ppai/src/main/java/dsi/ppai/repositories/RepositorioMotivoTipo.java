@@ -1,49 +1,42 @@
 package dsi.ppai.repositories;
 
-import dsi.ppai.entities.MotivoFueraServicio;
 import dsi.ppai.entities.MotivoTipo;
-import lombok.Data;
-import org.springframework.stereotype.Repository;
+import jakarta.annotation.PostConstruct; // Importar PostConstruct
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Repository
-@Data
+@Component
 public class RepositorioMotivoTipo {
 
-    private final List<MotivoFueraServicio> motivos = new ArrayList<>();
+    private final Map<String, MotivoTipo> motivos = new HashMap<>();
 
-    public RepositorioMotivoTipo() {
-        MotivoTipo correcto = new MotivoTipo("Correcto");
-        MotivoTipo incorrecto = new MotivoTipo("Incorrecto");
+    // Usamos @PostConstruct para inicializar los motivos al inicio de la aplicación
+    @PostConstruct
+    public void init() {
+        System.out.println("Inicializando RepositorioMotivoTipo...");
+        // Precargar datos
+        MotivoTipo motivoMantenimiento = new MotivoTipo("Mantenimiento");
+        MotivoTipo motivoCalibracion = new MotivoTipo("Calibracion");
+        MotivoTipo motivoFallaSensor = new MotivoTipo("Falla de Sensor");
 
-        MotivoFueraServicio m1 = new MotivoFueraServicio("Sin novedades", correcto);
-        MotivoFueraServicio m2 = new MotivoFueraServicio("Fuga detectada", incorrecto);
-        MotivoFueraServicio m3 = new MotivoFueraServicio("Faltan datos", incorrecto);
-
-        correcto.agregarMotivo(m1);
-        incorrecto.agregarMotivo(m2);
-        incorrecto.agregarMotivo(m3);
+        motivos.put(motivoMantenimiento.getDescripcion(), motivoMantenimiento);
+        motivos.put(motivoCalibracion.getDescripcion(), motivoCalibracion);
+        motivos.put(motivoFallaSensor.getDescripcion(), motivoFallaSensor);
+        System.out.println("Motivos de Tipo precargados: " + motivos.keySet());
     }
 
-    /**
-     * Retorna los motivos según el tipo de cierre ("Correcto" o "Incorrecto").
-     */
-    public List<MotivoFueraServicio> getMotivosPorTipo(String tipoDescripcion) {
-        return motivos.stream()
-                .filter(m -> m.getMotivoTipo().getDescripcion().equalsIgnoreCase(tipoDescripcion))
-                .collect(Collectors.toList());
+    public MotivoTipo buscarMotivoPorDescripcion(String descripcion) {
+        return motivos.get(descripcion);
     }
 
-
-    public List<MotivoTipo> getMotivos() {
-        return List.of(
-                new MotivoTipo("Correcto"),
-                new MotivoTipo("Incorrecto"),
-                new MotivoTipo("Falta de presión"),
-                new MotivoTipo("Daño mecánico")
-        );
+    // ¡¡NUEVO MÉTODO AÑADIDO PARA RESOLVER EL ERROR!!
+    public List<MotivoTipo> buscarTodos() {
+        return new ArrayList<>(motivos.values());
     }
 }

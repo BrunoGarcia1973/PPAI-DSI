@@ -3,45 +3,52 @@ package dsi.ppai.entities;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Data
+@Data // <-- ASEGURATE QUE ESTA ANOTACION ESTA AQUI
 @NoArgsConstructor
 @AllArgsConstructor
 public class Sismografo {
+    private Long identificadorSismografo;
+    private LocalDate fechaCalibracion;
+    private Integer numeroSerie; // <-- ¡ASEGURATE QUE EL NOMBRE DEL CAMPO ES EXACTAMENTE "numeroSerie" (con 'n' minúscula)!
+    private List<CambioEstado> historialCambioEstado;
+    private Estado estadoActual;
 
-    private Integer identificadorSismografo;
-    private LocalDate fechaAdquisicion;
-    private Integer nroSerie;
-    private EstacionSismologica estacionSismologica;
-    private List<CambioEstado> cambiosDeEstados = new ArrayList<>();
-
-    public boolean tieneEstadoActual() {
-        return cambiosDeEstados.stream().anyMatch(CambioEstado::esEstadoActual);
+    public Sismografo(Long identificadorSismografo, LocalDate fechaCalibracion, Integer numeroSerie) {
+        this.identificadorSismografo = identificadorSismografo;
+        this.fechaCalibracion = fechaCalibracion;
+        this.numeroSerie = numeroSerie;
+        this.historialCambioEstado = new ArrayList<>();
     }
 
-    public void marcarFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados) {
-        // 1) Obtener el cambio de estado actual
-        CambioEstado cambioActual = cambiosDeEstados.stream()
-                .filter(CambioEstado::esEstadoActual)
-                .findFirst()
-                .orElse(null);
+    public void cambiarEstado(Empleado empleadoQueCambia, Estado nuevoEstado) {
+        Estado estadoAnterior = this.estadoActual;
+        this.estadoActual = nuevoEstado;
 
-        if (cambioActual != null) {
-            cambioActual.setFechaHoraFin(LocalDateTime.now());
-        }
-
-        // 2) Crear el nuevo estado 'FueraDeServicio' y el CambioEstado usando el factory method
-        CambioEstado nuevoCambio = CambioEstado.createFueraDeServicio(
-                cambioActual != null ? cambioActual.getEmpleado() : null,
-                cambioActual != null ? cambioActual.getEstadoAnterior() : null,
-                motivosSeleccionados
+        CambioEstado cambio = new CambioEstado(
+                empleadoQueCambia,
+                estadoAnterior,
+                nuevoEstado,
+                LocalDateTime.now(),
+                null,
+                null
         );
+        this.historialCambioEstado.add(cambio);
+    }
 
-        // 3) Registrar el nuevo cambio de estado
-        cambiosDeEstados.add(nuevoCambio);
+    public void marcarFueraDeServicio(Empleado empleado, Estado estadoFueraDeServicio, List<MotivoFueraServicio> motivos) {
+        if (this.estadoActual == null || !this.estadoActual.equals(estadoFueraDeServicio)) {
+            CambioEstado cambio = new CambioEstado(empleado, this.estadoActual, estadoFueraDeServicio, LocalDateTime.now(), null, motivos);
+            this.historialCambioEstado.add(cambio);
+            this.estadoActual = estadoFueraDeServicio;
+            System.out.println("Sismógrafo " + identificadorSismografo + " marcado como FUERA DE SERVICIO.");
+        } else {
+            System.out.println("Sismógrafo " + identificadorSismografo + " ya está FUERA DE SERVICIO.");
+        }
     }
 }

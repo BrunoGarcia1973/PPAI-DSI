@@ -1,101 +1,47 @@
 package dsi.ppai.entities;
+
+import lombok.Data; // <--- ¡ASEGÚRATE DE QUE ESTA IMPORTACIÓN ESTÁ PRESENTE!
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor; // Opcional, pero bueno tenerlo si usas todos los campos en un constructor.
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
-@Data
+
+@Data // <--- ¡ESTA ANOTACIÓN ES CRUCIAL PARA LOS SETTERS Y GETTERS!
+@NoArgsConstructor // Necesario para Spring si usas un constructor personalizado
+// @AllArgsConstructor // Descomentar si usas un constructor que incluya todos los campos (incluyendo la lista)
 public class OrdenDeInspeccion {
-
+    private Long numeroOrden;
+    private LocalDateTime fechaHoraCreacion;
+    private Empleado responsableInspeccion; // El empleado asociado a la orden
     private LocalDateTime fechaHoraCierre;
-    private LocalDateTime fechaHoraFinalizacion;
-    private LocalDateTime fechaHoraInicio;
-    // Métodos llamados por el Gestor en el primer loop:
-    private Long numOrden;
     private String observacionCierre;
+    private List<CambioEstado> historialCambioEstado;
+    private Estado estadoActual; // Estado actual de la orden
+    private EstacionSismologica nombreES; // Referencia a la Estacion Sismologica
 
-    private Empleado empleado; // Relacion con la clase Empleado
-    private Estado estado; // Relacion con el Estado 
-    private EstacionSismologica estacionSismologica; // Relacion con la estacion
-    private List<CambioEstado> cambios = new ArrayList<>();
-
-    public OrdenDeInspeccion(Long numOrden, LocalDateTime fechaHoraInicio, Empleado empleado, LocalDateTime fechaHoraCierre, String observacion, LocalDateTime fechaHoraFinalizacion, Estado estado, EstacionSismologica estacion) {
-        this.numOrden = numOrden;
-        this.fechaHoraInicio = fechaHoraInicio;
-        this.empleado = empleado;
+    // Constructor personalizado para la creación de órdenes de inspección
+    public OrdenDeInspeccion(Long numeroOrden, LocalDateTime fechaHoraCreacion, Empleado responsableInspeccion,
+                             LocalDateTime fechaHoraCierre, String observacionCierre, List<CambioEstado> historialCambioEstado,
+                             Estado estadoActual, EstacionSismologica nombreES) {
+        this.numeroOrden = numeroOrden;
+        this.fechaHoraCreacion = fechaHoraCreacion;
+        this.responsableInspeccion = responsableInspeccion;
         this.fechaHoraCierre = fechaHoraCierre;
-        this.observacionCierre = observacion;
-        this.fechaHoraFinalizacion = fechaHoraFinalizacion;
-        this.estado = estado;
-        this.estacionSismologica = estacion;
+        this.observacionCierre = observacionCierre;
+        // Siempre inicializa la lista para evitar NullPointerException
+        this.historialCambioEstado = historialCambioEstado != null ? new ArrayList<>(historialCambioEstado) : new ArrayList<>();
+        this.estadoActual = estadoActual;
+        this.nombreES = nombreES;
     }
 
-    public OrdenDeInspeccion(Long numeroOrden, Empleado empleado) {
-        this.numOrden = numeroOrden;
-        this.empleado = empleado;
-    }
-
-
-    ///Me fijo asi es de empleado 
-    public boolean sosDeEmpleado(Empleado empleado) {
-        return this.empleado.equals(empleado);
-    }
-
-
-    public LocalDateTime getFechaFinalizacion() {
-        return fechaHoraFinalizacion;
-    }
-    //Delegacion para que me de el nombre de la ES
-    public EstacionSismologica getNombreES() {
-        return this.estacionSismologica;
-    }
-
-    //Delegacion del identificador del sismografo
-    public Integer getIdentificadorSismografo() {
-        return estacionSismologica.obtenerIdentificadorSismografo();
-    }
-
-
-    public boolean sosCompletamenteRealizada() {
-        return estado != null && estado.sosCompletamenteRealizada();
-    }
-
-
-
-    public void ponerFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados) {
-        // 1) Crear el nuevo estado para la ORDEN (opcional)
-        Estado nuevoEstadoOrden = new Estado("Orden de Inspeccion", "CERRADA_FUERA_DE_SERVICIO");
-        LocalDateTime ahora = LocalDateTime.now();
-
-        // 2) Crear y registrar el cambio de estado de la ORDEN (opcional)
-        CambioEstado cambioOrden = new CambioEstado(
-                this.empleado,
-                this.estado,
-                nuevoEstadoOrden,
-                ahora,
-                null,
-                motivosSeleccionados
-        );
-        this.estado = nuevoEstadoOrden;
-        registrarCambioEstado(cambioOrden);
-
-        // 3) Obtener el sismógrafo asociado
-        Sismografo sismografo = estacionSismologica.getSismografo();
-        if (sismografo != null) {
-            // 4) Llamar al método de Sismografo para marcarlo fuera de servicio
-            sismografo.marcarFueraDeServicio(motivosSeleccionados);
+    public void agregarCambioEstado(CambioEstado cambioEstado) {
+        if (this.historialCambioEstado == null) {
+            this.historialCambioEstado = new ArrayList<>();
         }
-    }
-    public List<MotivoTipo> getMotivos() {
-        if (cambios.isEmpty()) {
-            return List.of(); // lista vacía si no hay cambios
-        }
-
-        CambioEstado ultimoCambio = cambios.get(cambios.size() - 1);
-        return ultimoCambio.getMotivos();
-    }
-
-    public void registrarCambioEstado(CambioEstado cambio) {
-        this.cambios.add(cambio);
+        this.historialCambioEstado.add(cambioEstado);
+        // Opcional: Actualizar el estado actual de la orden al agregar un cambio de estado
+        this.estadoActual = cambioEstado.getNuevoEstado();
     }
 }
-
