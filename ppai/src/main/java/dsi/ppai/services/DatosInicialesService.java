@@ -128,21 +128,27 @@ public class DatosInicialesService {
         // --- INICIALIZACIÓN DE ÓRDENES DE INSPECCIÓN ---
         Long numeroOrdenCounter = 1001L;
 
+        // Fecha y hora actual menos 10 horas para la fechaHoraFinalizacion como tú pediste
+        LocalDateTime fechaFinalizacionPorDefecto = LocalDateTime.now().minusHours(10);
+
+
         // ***** ASIGNACIÓN DE ÓRDENES SEGÚN REQUERIMIENTO *****
 
         // --- ÓRDENES PARA JUAN (3 órdenes) ---
         // Orden 1 para Juan (Cerrada)
+        LocalDateTime fechaCierreJuan1 = LocalDateTime.now().minusDays(4).minusHours(2);
         OrdenDeInspeccion ordenJuan1 = new OrdenDeInspeccion(
                 numeroOrdenCounter++,
                 LocalDateTime.now().minusDays(5).minusHours(10),
                 empleadoRI_Juan,
-                LocalDateTime.now().minusDays(4).minusHours(2),
+                fechaCierreJuan1, // Fecha de Cierre
                 "Inspección rutinaria completa sin incidencias mayores.",
                 null,
                 estadoCompletamenteRealizada,
-                estacionSismologicaB
+                estacionSismologicaB,
+                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
         );
-        ordenJuan1.agregarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoCompletamenteRealizada, LocalDateTime.now().minusDays(4).minusHours(2), null, null));
+        ordenJuan1.agregarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoCompletamenteRealizada, fechaCierreJuan1, null, null));
         repoOrdenes.insertar(ordenJuan1);
 
         // Orden 2 para Juan (Abierta)
@@ -150,11 +156,12 @@ public class DatosInicialesService {
                 numeroOrdenCounter++,
                 LocalDateTime.now().minusDays(2).minusHours(8),
                 empleadoRI_Juan,
-                null,
+                null, // Es nulo porque la orden está abierta
                 null,
                 null,
                 estadoAbierta,
-                estacionSismologicaA
+                estacionSismologicaA,
+                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
         );
         ordenJuan2.agregarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoAbierta, LocalDateTime.now().minusDays(2).minusHours(8), null, null));
         repoOrdenes.insertar(ordenJuan2);
@@ -164,11 +171,12 @@ public class DatosInicialesService {
                 numeroOrdenCounter++,
                 LocalDateTime.now().minusDays(1).minusHours(3),
                 empleadoRI_Juan,
-                null,
+                null, // Es nulo porque la orden está abierta
                 null,
                 null,
                 estadoAbierta,
-                estacionSismologicaB
+                estacionSismologicaB,
+                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
         );
         ordenJuan3.agregarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoAbierta, LocalDateTime.now().minusDays(1).minusHours(3), null, null));
         repoOrdenes.insertar(ordenJuan3);
@@ -192,7 +200,8 @@ public class DatosInicialesService {
                 null,
                 null,
                 estadoAbierta,
-                estacionSismologicaA
+                estacionSismologicaA,
+                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
         );
         ordenCarlos1.agregarCambioEstado(new CambioEstado(empleadoRI_Carlos, null, estadoAbierta, LocalDateTime.now().minusDays(7), null, null));
         repoOrdenes.insertar(ordenCarlos1);

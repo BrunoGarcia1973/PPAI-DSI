@@ -1,6 +1,6 @@
 package dsi.ppai.entities;
 
-import lombok.Data; // <--- ¡ASEGÚRATE DE QUE ESTA IMPORTACIÓN ESTÁ PRESENTE!
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor; // Opcional, pero bueno tenerlo si usas todos los campos en un constructor.
 
@@ -20,11 +20,12 @@ public class OrdenDeInspeccion {
     private List<CambioEstado> historialCambioEstado;
     private Estado estadoActual; // Estado actual de la orden
     private EstacionSismologica nombreES; // Referencia a la Estacion Sismologica
+    private LocalDateTime fechaHoraFinalizacion; // <--- Nuevo atributo
 
     // Constructor personalizado para la creación de órdenes de inspección
     public OrdenDeInspeccion(Long numeroOrden, LocalDateTime fechaHoraCreacion, Empleado responsableInspeccion,
                              LocalDateTime fechaHoraCierre, String observacionCierre, List<CambioEstado> historialCambioEstado,
-                             Estado estadoActual, EstacionSismologica nombreES) {
+                             Estado estadoActual, EstacionSismologica nombreES, LocalDateTime fechaHoraFinalizacion) { // <--- Nuevo atributo en el constructor
         this.numeroOrden = numeroOrden;
         this.fechaHoraCreacion = fechaHoraCreacion;
         this.responsableInspeccion = responsableInspeccion;
@@ -34,6 +35,7 @@ public class OrdenDeInspeccion {
         this.historialCambioEstado = historialCambioEstado != null ? new ArrayList<>(historialCambioEstado) : new ArrayList<>();
         this.estadoActual = estadoActual;
         this.nombreES = nombreES;
+        this.fechaHoraFinalizacion = fechaHoraFinalizacion; // <--- Asignación del nuevo atributo
     }
 
     public void agregarCambioEstado(CambioEstado cambioEstado) {

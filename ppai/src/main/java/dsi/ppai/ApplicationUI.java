@@ -23,11 +23,12 @@ import javafx.stage.Stage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional; // Necesario para manejar el resultado del Alert
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,6 +49,8 @@ public class ApplicationUI extends Application {
 
     private Map<CheckBox, TextField> comentarioFieldsPorMotivo = new HashMap<>();
     private List<CheckBox> motivoCheckBoxes = new ArrayList<>();
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Autowired
     public ApplicationUI(GestorInspeccion gestorInspeccion, Sesion sesion,
@@ -142,20 +145,28 @@ public class ApplicationUI extends Application {
             motivosBox.getChildren().add(motivoEntry);
         });
 
+        // *** CAMBIO CLAVE AQUÍ: Listener del checkbox principal ***
         marcarFueraServicioCheckbox.selectedProperty().addListener((obs, oldVal, newVal) -> {
             motivosBox.setDisable(!newVal);
             if (!newVal) {
+                // Al desmarcar "Marcar Sismógrafo Fuera de Servicio",
+                // deseleccionar todos los motivos y limpiar sus comentarios.
                 motivoCheckBoxes.forEach(cb -> {
                     cb.setSelected(false);
+                    TextField comentarioField = comentarioFieldsPorMotivo.get(cb);
+                    if (comentarioField != null) {
+                        comentarioField.clear();
+                    }
                 });
             }
+            // Después de limpiar o habilitar/deshabilitar los motivos,
+            // asegurar que se reevalúe el estado del botón.
             actualizarEstadoBotonCerrarOrden();
         });
 
         cerrarOrdenButton = new Button("Cerrar Orden");
         cerrarOrdenButton.setDisable(true);
 
-        // Modificación AQUÍ: El botón ahora llama a mostrarConfirmacionCierreOrden()
         cerrarOrdenButton.setOnAction(e -> {
             mostrarConfirmacionCierreOrden();
         });
@@ -197,7 +208,20 @@ public class ApplicationUI extends Application {
             ordenesComboBox.setConverter(new javafx.util.StringConverter<OrdenDeInspeccion>() {
                 @Override
                 public String toString(OrdenDeInspeccion object) {
-                    return object != null ? "Orden #" + object.getNumeroOrden() + " (Estación: " + (object.getNombreES() != null ? object.getNombreES().getNombre() : "N/A") + ")" : "";
+                    if (object != null) {
+                        String sismografoId = "N/A";
+                        if (object.getNombreES() != null && object.getNombreES().getSismografo() != null) {
+                            sismografoId = String.valueOf(object.getNombreES().getSismografo().getIdentificadorSismografo());
+                        }
+                        String fechaFinalizacion = (object.getFechaHoraFinalizacion() != null) ?
+                                object.getFechaHoraFinalizacion().format(DATE_TIME_FORMATTER) : "N/A";
+
+                        return "Orden #" + object.getNumeroOrden() +
+                                " (Estación: " + (object.getNombreES() != null ? object.getNombreES().getNombre() : "N/A") +
+                                ", Sismógrafo ID: " + sismografoId +
+                                ", Finalización: " + fechaFinalizacion + ")";
+                    }
+                    return "";
                 }
 
                 @Override
@@ -221,37 +245,40 @@ public class ApplicationUI extends Application {
         boolean ordenSeleccionada = ordenesComboBox.getSelectionModel().getSelectedItem() != null;
         boolean observacionNoVacia = observacionCierreArea.getText() != null && !observacionCierreArea.getText().trim().isEmpty();
 
-        boolean motivosYComentariosValidos = true;
+        boolean motivosValidos = true; // Valor predeterminado optimista
 
-        if (observacionNoVacia) {
-            if (!marcarFueraServicioCheckbox.isSelected()) {
-                motivosYComentariosValidos = false;
-            } else {
-                boolean alMenosUnMotivoSeleccionadoYComentado = false;
-                for (CheckBox cb : motivoCheckBoxes) {
-                    if (cb.isSelected()) {
-                        TextField comentarioField = comentarioFieldsPorMotivo.get(cb);
-                        if (comentarioField == null || comentarioField.getText().trim().isEmpty()) {
-                            motivosYComentariosValidos = false;
-                            break;
-                        }
+        if (marcarFueraServicioCheckbox.isSelected()) {
+            boolean alMenosUnMotivoSeleccionadoYComentado = false;
+            for (CheckBox cb : motivoCheckBoxes) {
+                if (cb.isSelected()) {
+                    TextField comentarioField = comentarioFieldsPorMotivo.get(cb);
+                    if (comentarioField != null && !comentarioField.getText().trim().isEmpty()) {
                         alMenosUnMotivoSeleccionadoYComentado = true;
+                    } else {
+                        // Si un motivo está seleccionado pero su comentario está vacío, es inválido.
+                        motivosValidos = false;
+                        break; // No es necesario seguir revisando
                     }
                 }
-                if (!alMenosUnMotivoSeleccionadoYComentado) {
-                    motivosYComentariosValidos = false;
-                }
+            }
+            // Si el checkbox "Fuera de Servicio" está marcado, pero no se seleccionó al menos un motivo con comentario,
+            // entonces los motivos no son válidos.
+            if (!alMenosUnMotivoSeleccionadoYComentado) {
+                motivosValidos = false;
             }
         } else {
-            if (marcarFueraServicioCheckbox.isSelected()) {
-                motivosYComentariosValidos = false;
-            }
+            // *** CAMBIO CLAVE AQUÍ: Lógica de validación cuando "Marcar Sismógrafo Fuera de Servicio" NO está seleccionado ***
+            // Si el checkbox principal NO está marcado, entonces NINGÚN motivo individual debe estar seleccionado.
+            // Si hay CUALQUIERA seleccionado, los motivos son inválidos.
             if (motivoCheckBoxes.stream().anyMatch(CheckBox::isSelected)) {
-                motivosYComentariosValidos = false;
+                motivosValidos = false; // Hay motivos seleccionados cuando no debería haberlos
+            } else {
+                motivosValidos = true; // No hay motivos seleccionados y no se marcó el checkbox principal, por lo tanto, es válido.
             }
         }
 
-        cerrarOrdenButton.setDisable(!(empleadoSeleccionado && ordenSeleccionada && observacionNoVacia && motivosYComentariosValidos));
+        // El botón se habilita solo si todas las condiciones son verdaderas
+        cerrarOrdenButton.setDisable(!(empleadoSeleccionado && ordenSeleccionada && observacionNoVacia && motivosValidos));
     }
 
     private void mostrarAlerta(String titulo, String mensaje) {
@@ -262,7 +289,6 @@ public class ApplicationUI extends Application {
         alert.showAndWait();
     }
 
-    // NUEVO MÉTODO: Mostrar la ventana de confirmación
     private void mostrarConfirmacionCierreOrden() {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmar Cierre de Orden");
@@ -277,20 +303,16 @@ public class ApplicationUI extends Application {
         Optional<ButtonType> result = alert.showAndWait();
 
         if (result.isPresent() && result.get() == buttonTypeConfirmar) {
-            // Si el usuario confirma, entonces se procede con la lógica de cierre
             ejecutarCierreDeOrden();
         } else {
             System.out.println("Cierre de orden cancelado por el usuario.");
         }
     }
 
-    // NUEVO MÉTODO: Contiene la lógica real de cierre de la orden
     private void ejecutarCierreDeOrden() {
         try {
             OrdenDeInspeccion ordenSeleccionada = ordenesComboBox.getSelectionModel().getSelectedItem();
             if (ordenSeleccionada == null) {
-                // Esto no debería ocurrir si el botón está deshabilitado correctamente,
-                // pero se mantiene como validación de respaldo.
                 mostrarAlerta("Error", "Por favor, seleccione una orden de inspección.");
                 return;
             }
@@ -309,17 +331,11 @@ public class ApplicationUI extends Application {
 
             List<MotivoFueraServicio> motivosSeleccionados = new ArrayList<>();
 
-            // Re-validaciones (aunque el botón ya está deshabilitado si no se cumplen)
-            // Se mantienen para robustez y para capturar posibles desincronizaciones de UI/lógica
-            if (observacionCierre != null && !observacionCierre.trim().isEmpty()) {
-                if (!marcarFueraServicioCheckbox.isSelected()) {
-                    mostrarAlerta("Error de Validación", "Si ingresa Observaciones de Cierre, debe marcar 'Marcar Sismógrafo Fuera de Servicio'.");
-                    return;
-                }
-
-                boolean alMenosUnMotivoSeleccionadoYComentado = false;
+            if (marcarFueraServicioCheckbox.isSelected()) {
+                boolean alMenosUnMotivoSeleccionado = false;
                 for (CheckBox cb : motivoCheckBoxes) {
                     if (cb.isSelected()) {
+                        alMenosUnMotivoSeleccionado = true;
                         TextField comentarioField = comentarioFieldsPorMotivo.get(cb);
                         String comentarioParaMotivo = (comentarioField != null) ? comentarioField.getText().trim() : "";
 
@@ -327,7 +343,6 @@ public class ApplicationUI extends Application {
                             mostrarAlerta("Error de Validación", "El comentario es obligatorio para el motivo '" + cb.getText() + "' si está seleccionado.");
                             return;
                         }
-                        alMenosUnMotivoSeleccionadoYComentado = true;
 
                         MotivoTipo tipo = repositorioMotivoTipo.buscarMotivoPorDescripcion(cb.getText());
                         if (tipo == null) {
@@ -339,24 +354,41 @@ public class ApplicationUI extends Application {
                     }
                 }
 
-                if (!alMenosUnMotivoSeleccionadoYComentado) {
-                    mostrarAlerta("Error de Validación", "Debe seleccionar y comentar al menos un motivo si marca el sismógrafo como 'Fuera de Servicio' y tiene Observaciones de Cierre.");
+                if (!alMenosUnMotivoSeleccionado) {
+                    mostrarAlerta("Error de Validación", "Debe seleccionar al menos un motivo si marca el sismógrafo como 'Fuera de Servicio'.");
+                    return;
+                }
+            } else {
+                // Esta es la validación final antes de cerrar la orden.
+                // Si el checkbox principal está desmarcado, no debería haber motivos seleccionados.
+                if (motivoCheckBoxes.stream().anyMatch(CheckBox::isSelected)) {
+                    mostrarAlerta("Error de Validación", "No puede seleccionar motivos si no marca 'Marcar Sismógrafo Fuera de Servicio'. Se han desmarcado los motivos.");
+                    // Forzar el reseteo de motivos aquí también, como medida de seguridad.
+                    motivoCheckBoxes.forEach(cb -> {
+                        cb.setSelected(false);
+                        TextField comentarioField = comentarioFieldsPorMotivo.get(cb);
+                        if (comentarioField != null) {
+                            comentarioField.clear();
+                        }
+                    });
+                    actualizarEstadoBotonCerrarOrden(); // Reevaluar el estado del botón después de limpiar
                     return;
                 }
             }
 
-            String legajoRI = sesion.getLegajoEmpleadoLogueado();
+            String legajoRI = sesion.getEmpleadoLogueado().getLegajo();
 
             gestorInspeccion.cerrarOrden(numeroOrden, observacionCierre, motivosSeleccionados);
             mostrarAlerta("Éxito", "Orden " + numeroOrden + " cerrada exitosamente y sismógrafo actualizado (si aplica).");
 
-            // Limpiar la UI después de la operación exitosa
+            // Limpiar la interfaz después de un cierre exitoso
             observacionCierreArea.clear();
-            marcarFueraServicioCheckbox.setSelected(false);
+            marcarFueraServicioCheckbox.setSelected(false); // Esto disparará el listener y limpiará los motivos
             ordenesComboBox.getSelectionModel().clearSelection();
+            ordenesComboBox.setPromptText("Seleccione un RI primero.");
 
             cargarOrdenesDisponibles();
-            actualizarEstadoBotonCerrarOrden();
+            actualizarEstadoBotonCerrarOrden(); // Asegurar la reevaluación final
 
             List<OrdenDeInspeccion> ordenesCompletadas = gestorInspeccion.obtenerOrdenesCompletadasDelRI(legajoRI);
             mostrarOrdenesCompletadas(ordenesCompletadas);
@@ -369,7 +401,6 @@ public class ApplicationUI extends Application {
         }
     }
 
-
     private void mostrarOrdenesCompletadas(List<OrdenDeInspeccion> ordenes) {
         if (ordenes.isEmpty()) {
             System.out.println("No se encontraron órdenes completadas para este Responsable de Inspección.");
@@ -379,16 +410,28 @@ public class ApplicationUI extends Application {
         System.out.println("\n--- Órdenes de Inspección Completadas ---");
         for (OrdenDeInspeccion orden : ordenes) {
             System.out.println("Número de Orden: " + orden.getNumeroOrden());
-            System.out.println("Fecha de Creación: " + orden.getFechaHoraCreacion());
-            System.out.println("Fecha de Cierre: " + orden.getFechaHoraCierre());
+            System.out.println("Fecha de Creación: " + orden.getFechaHoraCreacion().format(DATE_TIME_FORMATTER));
+            System.out.println("Fecha de Cierre: " + (orden.getFechaHoraCierre() != null ? orden.getFechaHoraCierre().format(DATE_TIME_FORMATTER) : "N/A"));
+            System.out.println("Fecha de Finalización: " + (orden.getFechaHoraFinalizacion() != null ? orden.getFechaHoraFinalizacion().format(DATE_TIME_FORMATTER) : "N/A"));
             System.out.println("Observación de Cierre: " + orden.getObservacionCierre());
-            System.out.println("Sismógrafo: " + (orden.getNombreES() != null && orden.getNombreES().getSismografo() != null ? orden.getNombreES().getSismografo().getIdentificadorSismografo() : "N/A"));
-            System.out.println("Estado Actual de Sismógrafo: " + (orden.getNombreES() != null && orden.getNombreES().getSismografo() != null && orden.getNombreES().getSismografo().getEstadoActual() != null ? orden.getNombreES().getSismografo().getEstadoActual().getNombre() : "N/A"));
+            System.out.println("Estación Sismológica: " + (orden.getNombreES() != null ? orden.getNombreES().getNombre() : "N/A"));
+
+            String sismografoId = "N/A";
+            String sismografoEstado = "N/A";
+            if (orden.getNombreES() != null && orden.getNombreES().getSismografo() != null) {
+                sismografoId = String.valueOf(orden.getNombreES().getSismografo().getIdentificadorSismografo());
+                if (orden.getNombreES().getSismografo().getEstadoActual() != null) {
+                    sismografoEstado = orden.getNombreES().getSismografo().getEstadoActual().getNombre();
+                }
+            }
+            System.out.println("Sismógrafo ID: " + sismografoId);
+            System.out.println("Estado Actual de Sismógrafo: " + sismografoEstado);
+
 
             if (orden.getHistorialCambioEstado() != null && !orden.getHistorialCambioEstado().isEmpty()) {
                 System.out.println("Historial de Cambios de Estado:");
                 for (CambioEstado cambio : orden.getHistorialCambioEstado()) {
-                    System.out.println("  - Cambio de Estado a: " + cambio.getNuevoEstado().getNombre() + " (Fecha: " + cambio.getFechaHoraInicio() + ")");
+                    System.out.println("  - Cambio de Estado a: " + cambio.getNuevoEstado().getNombre() + " (Fecha: " + cambio.getFechaHoraInicio().format(DATE_TIME_FORMATTER) + ")");
                     if (cambio.getMotivos() != null && !cambio.getMotivos().isEmpty()) {
                         System.out.println("    Motivos Asociados:");
                         for (MotivoFueraServicio mfs : cambio.getMotivos()) {
