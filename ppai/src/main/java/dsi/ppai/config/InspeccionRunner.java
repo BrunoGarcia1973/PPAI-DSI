@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.stream.Collectors;
 
-@Component
+//@Component
 public class InspeccionRunner implements CommandLineRunner {
 
     private final GestorInspeccion gestor;
@@ -41,6 +41,7 @@ public class InspeccionRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Instanciar sismografos
+        /*
         Sismografo sismografoA = new Sismografo();
         sismografoA.setIdentificadorSismografo(32149);
         sismografoA.setNroSerie(12345632);
@@ -311,6 +312,9 @@ public class InspeccionRunner implements CommandLineRunner {
         }
 
         scanner.close();
+
+         */
     }
+
 }
 

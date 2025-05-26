@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 
 @Service
@@ -42,7 +42,7 @@ public class GestorInspeccion {
 
      */
 
-    public void buscarOrdenesInspeccionDeRI() {
+    public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
 
 // 1) Obtengo el empleado logueado desde la sesión
 
@@ -52,7 +52,7 @@ public class GestorInspeccion {
 
 // 2) Pido al repositorio las órdenes de ese RI y filtro las completadas
 
-        repoOrdenes
+        return repoOrdenes
 
                 .buscarOrdenesInspeccionDeRI(empleado.getLegajo())
 
@@ -60,7 +60,7 @@ public class GestorInspeccion {
 
                 .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
 
-                .toList();
+                .collect(Collectors.toList());
 
     }
 
