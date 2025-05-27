@@ -4,10 +4,14 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-@Data // Asegúrate de que @Data esté presente
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class Rol {
     private String nombre;
     private String descripcion;
+
+    public Rol(String nombre, String descripcion) {
+        this.nombre = nombre;
+        this.descripcion = descripcion;
+    }
 }

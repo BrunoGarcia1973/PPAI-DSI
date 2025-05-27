@@ -1,40 +1,31 @@
 package dsi.ppai.entities;
-import lombok.AllArgsConstructor;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 
-/**
- * Representa un Estado dentro del sistema.
- */
 @Data
 @NoArgsConstructor
-@RequiredArgsConstructor
-@AllArgsConstructor
 public class Estado {
-
-    /**
-     * Ámbito al que pertenece el estado (opcional).
-     */
-    private String ambito;
-
-    /**
-     * Nombre del estado. No puede ser null.
-     */
-    @NonNull
     private String nombre;
 
-    /**
-     * Nombre constante para el estado "CompletamenteRealizada".
-     */
-    public static final String ESTADO_COMPLETAMENTE_REALIZADA = "CompletamenteRealizada";
+    public Estado(String nombre) {
+        this.nombre = nombre;
+    }
 
-    /**
-     * Indica si este estado corresponde a "CompletamenteRealizada".
-     */
-    public boolean sosCompletamenteRealizada() {
-        return ESTADO_COMPLETAMENTE_REALIZADA.equalsIgnoreCase(this.nombre);
+    public boolean esAbierta() {
+        return "ABIERTA".equals(this.nombre);
+    }
+    public boolean esCompletamenteRealizada() {
+        return "COMPLETAMENTE_REALIZADA".equals(this.nombre);
+    }
+    public boolean esFueraDeServicio() {
+        return "FUERA_DE_SERVICIO".equals(this.nombre);
+    }
+    public boolean esEnMantenimiento() {
+        return "EN_MANTENIMIENTO".equals(this.nombre);
+    }
+    public boolean esCerrada() {
+        return "CERRADA".equals(this.nombre);
     }
 }
-

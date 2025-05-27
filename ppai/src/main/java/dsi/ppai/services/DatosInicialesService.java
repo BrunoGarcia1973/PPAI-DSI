@@ -1,11 +1,7 @@
 package dsi.ppai.services;
 
 import dsi.ppai.entities.*;
-import dsi.ppai.repositories.RepositorioEstados;
-import dsi.ppai.repositories.RepositorioMotivoTipo;
-import dsi.ppai.repositories.RepositorioOrdenes;
-import dsi.ppai.repositories.RepositorioEmpleados;
-import dsi.ppai.repositories.RepositorioSismografos;
+import dsi.ppai.repositories.*;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Service;
 
@@ -39,57 +35,67 @@ public class DatosInicialesService {
     public void inicializarDatosDePrueba() {
         System.out.println("Inicializando datos de prueba desde DatosInicialesService...");
 
+        // Los repositorios (Estados, Motivos, Empleados, Sismografos)
+        // ya precargan sus datos en sus propios constructores.
+        // NO necesitamos llamar a ningún método 'guardar' aquí para ellos.
+        // Solo necesitamos OBTENER los datos que ya están precargados.
+
+        // --- OBTENCIÓN DE ESTADOS YA EXISTENTES ---
+        // Asumo que tu RepositorioEstados tiene un método buscarEstado(String nombre)
         Estado estadoCompletamenteRealizada = repoEstados.buscarEstado("COMPLETAMENTE_REALIZADA");
-        Estado estadoFueraDeServicio = repoEstados.buscarEstado("FUERA DE SERVICIO");
+        Estado estadoFueraDeServicio = repoEstados.buscarEstado("FUERA_DE_SERVICIO");
         Estado estadoEnMantenimiento = repoEstados.buscarEstado("EN_MANTENIMIENTO");
         Estado estadoAbierta = repoEstados.buscarEstado("ABIERTA");
         Estado estadoCerrada = repoEstados.buscarEstado("CERRADA");
 
         if (estadoCompletamenteRealizada == null || estadoFueraDeServicio == null || estadoEnMantenimiento == null || estadoAbierta == null || estadoCerrada == null) {
-            System.err.println("ERROR: Algunos estados no se encontraron en RepositorioEstados. Verifique los nombres y la precarga.");
+            System.err.println("ERROR: Algunos estados no se encontraron en RepositorioEstados. Verifique los nombres y la precarga en su constructor.");
             throw new RuntimeException("Error fatal: No se pudieron cargar todos los estados base.");
         }
         System.out.println("Estados de referencia obtenidos.");
 
+        // --- OBTENCIÓN DE MOTIVOS DE TIPO YA EXISTENTES ---
+        // Asumo que tu RepositorioMotivoTipo tiene un método buscarMotivoPorDescripcion(String descripcion)
         MotivoTipo motivoMantenimiento = repoMotivos.buscarMotivoPorDescripcion("Mantenimiento");
         MotivoTipo motivoCalibracion = repoMotivos.buscarMotivoPorDescripcion("Calibracion");
         MotivoTipo motivoFallaSensor = repoMotivos.buscarMotivoPorDescripcion("Falla de Sensor");
 
         if (motivoMantenimiento == null || motivoCalibracion == null || motivoFallaSensor == null) {
-            System.err.println("ERROR: Algunos motivos de tipo no se encontraron en RepositorioMotivoTipo. Verifique los nombres y la precarga.");
+            System.err.println("ERROR: Algunos motivos de tipo no se encontraron en RepositorioMotivoTipo. Verifique los nombres y la precarga en su constructor.");
             throw new RuntimeException("Error fatal: No se pudieron cargar todos los motivos de tipo base.");
         }
         System.out.println("Motivos de Tipo de referencia obtenidos.");
 
-        // Crear un empleado de sistema genérico si no hay RIs para la inicialización de sismógrafos
-        Empleado empleadoSistema = repoEmpleados.buscarResponsablesDeInspeccion().stream()
-                .findFirst()
-                .orElse(null);
+        // Obtenemos los empleados que ya están precargados en RepositorioEmpleados
+        Empleado empleadoRI_Juan = repoEmpleados.buscarEmpleadoPorLegajo("1001");
+        Empleado empleadoRI_Laura = repoEmpleados.buscarEmpleadoPorLegajo("2002");
+        Empleado empleadoRI_Carlos = repoEmpleados.buscarEmpleadoPorLegajo("3003");
+        Empleado empleadoSistema = repoEmpleados.buscarEmpleadoPorLegajo("SYS");
 
-        if (empleadoSistema == null) {
-            System.out.println("No se encontraron RIs existentes. Creando un empleado de sistema para la inicialización...");
-            empleadoSistema = new Empleado("SYS", "Sistema", "sys@example.com", "Sistema", "000000000", new Rol("SISTEMA", "Usuario del sistema"));
+        if (empleadoRI_Juan == null || empleadoRI_Laura == null || empleadoRI_Carlos == null || empleadoSistema == null) {
+            System.err.println("ERROR: No se encontraron todos los empleados esperados en RepositorioEmpleados. Verifique la precarga en RepositorioEmpleados.");
+            throw new RuntimeException("Error fatal: No se pudieron cargar todos los empleados base.");
         }
-        System.out.println("Empleado para inicialización: " + empleadoSistema.getNombre());
+        System.out.println("Empleados de referencia obtenidos de RepositorioEmpleados.");
 
+        // --- OBTENCIÓN DE SISMOGRAFOS YA EXISTENTES (o creación si tu RepoSismografos no los precarga) ---
+        // NOTA IMPORTANTE: Si RepoSismografos NO precarga sismógrafos en su constructor,
+        // ESTAS LÍNEAS ABAJO SON LAS QUE CREAN LOS SISMOGRAFOS.
+        // Si tu RepoSismografos ya tiene sismógrafos en su constructor,
+        // entonces estas líneas deberías cambiarlas a `repoSismografos.buscarSismografoPorId(...)`
+        // Para este ejemplo, ASUMO que RepoSismografos NO precarga, así que los creo aquí y los inserto.
+        Sismografo sismografoA = new Sismografo(32149, LocalDate.of(2022, 1, 15), 12345632);
+        sismografoA.agregarCambioEstado(new CambioEstado(empleadoSistema, null, estadoAbierta, LocalDateTime.now().minusDays(30), null, null));
+        repoSismografos.guardar(sismografoA); // <-- Esto asume que RepoSismografos TIENE un método 'guardar'.
 
-        // --- INICIALIZACIÓN DE SISMOGRAFOS ---
-        Sismografo sismografoA = new Sismografo(32149L, LocalDate.of(2022, 1, 15), 12345632);
-        sismografoA.cambiarEstado(empleadoSistema, estadoAbierta);
-        repoSismografos.insertar(sismografoA);
-        System.out.println("Sismógrafo A estado inicial: " + sismografoA.getEstadoActual().getNombre());
+        Sismografo sismografoB = new Sismografo(98765, LocalDate.of(2024, 10, 20), 78901234);
+        sismografoB.agregarCambioEstado(new CambioEstado(empleadoSistema, null, estadoAbierta, LocalDateTime.now().minusDays(15), null, null));
+        repoSismografos.guardar(sismografoB); // <-- Esto asume que RepoSismografos TIENE un método 'guardar'.
 
-        Sismografo sismografoB = new Sismografo(98765L, LocalDate.of(2024, 10, 20), 78901234);
-        sismografoB.cambiarEstado(empleadoSistema, estadoAbierta);
-        repoSismografos.insertar(sismografoB);
-        System.out.println("Sismógrafo B estado inicial: " + sismografoB.getEstadoActual().getNombre());
-
-        Sismografo sismografoC = new Sismografo(11223L, LocalDate.of(2023, 5, 10), 55667788);
-        sismografoC.cambiarEstado(empleadoSistema, estadoEnMantenimiento);
-        repoSismografos.insertar(sismografoC);
-        System.out.println("Sismógrafo C estado inicial: " + sismografoC.getEstadoActual().getNombre());
+        Sismografo sismografoC = new Sismografo(11223, LocalDate.of(2023, 5, 10), 55667788);
+        sismografoC.agregarCambioEstado(new CambioEstado(empleadoSistema, null, estadoEnMantenimiento, LocalDateTime.now().minusDays(5), null, null));
+        repoSismografos.guardar(sismografoC); // <-- Esto asume que RepoSismografos TIENE un método 'guardar'.
         System.out.println("Sismógrafos inicializados y registrados en RepositorioSismografos.");
-
 
         // --- INICIALIZACIÓN DE ESTACIONES SISMOLOGICAS ---
         EstacionSismologica estacionSismologicaA = new EstacionSismologica();
@@ -100,7 +106,7 @@ public class DatosInicialesService {
         estacionSismologicaA.setLongitud(67.890);
         estacionSismologicaA.setNroCertificacionAdquisicion(123456789L);
         estacionSismologicaA.setNombre("Estacion Villa Maria");
-        estacionSismologicaA.setSismografo(sismografoC);
+        estacionSismologicaA.setSismografo(sismografoC); // Sismógrafo C está en MANTENIMIENTO
 
         EstacionSismologica estacionSismologicaB = new EstacionSismologica();
         estacionSismologicaB.setEstacionId(789L);
@@ -110,100 +116,117 @@ public class DatosInicialesService {
         estacionSismologicaB.setLongitud(-65.123);
         estacionSismologicaB.setNroCertificacionAdquisicion(987654321L);
         estacionSismologicaB.setNombre("Estacion Alta Gracia");
-        estacionSismologicaB.setSismografo(sismografoA);
+        estacionSismologicaB.setSismografo(sismografoA); // Sismógrafo A está ABIERTO
         System.out.println("Estaciones Sismológicas inicializadas.");
-
-        // OBTENER EMPLEADOS YA PRECARGADOS DESDE REPOSITORIO
-        Empleado empleadoRI_Juan = repoEmpleados.buscarEmpleadoPorLegajo("1001");
-        Empleado empleadoRI_Laura = repoEmpleados.buscarEmpleadoPorLegajo("2002");
-        Empleado empleadoRI_Carlos = repoEmpleados.buscarEmpleadoPorLegajo("3003");
-
-        if (empleadoRI_Juan == null || empleadoRI_Laura == null || empleadoRI_Carlos == null) {
-            System.err.println("ERROR: Algunos empleados Responsables de Inspección no se encontraron en RepositorioEmpleados. Esto podría afectar la creación de órdenes.");
-            throw new RuntimeException("Error fatal: No se pudieron cargar todos los empleados responsables de inspección.");
-        }
-        System.out.println("Empleados de referencia obtenidos.");
-
 
         // --- INICIALIZACIÓN DE ÓRDENES DE INSPECCIÓN ---
         Long numeroOrdenCounter = 1001L;
 
-        // Fecha y hora actual menos 10 horas para la fechaHoraFinalizacion como tú pediste
-        LocalDateTime fechaFinalizacionPorDefecto = LocalDateTime.now().minusHours(10);
-
-
-        // ***** ASIGNACIÓN DE ÓRDENES SEGÚN REQUERIMIENTO *****
-
-        // --- ÓRDENES PARA JUAN (3 órdenes) ---
-        // Orden 1 para Juan (Cerrada)
+        // --- ÓRDENES PARA JUAN (Empleado con legajo 1001) ---
+        // Orden 1 para Juan (CompletamenteRealizada, ya cerrada)
         LocalDateTime fechaCierreJuan1 = LocalDateTime.now().minusDays(4).minusHours(2);
         OrdenDeInspeccion ordenJuan1 = new OrdenDeInspeccion(
                 numeroOrdenCounter++,
                 LocalDateTime.now().minusDays(5).minusHours(10),
-                empleadoRI_Juan,
-                fechaCierreJuan1, // Fecha de Cierre
+                empleadoRI_Juan, // Asignada a empleadoRI_Juan
+                fechaCierreJuan1, // Fecha de cierre ya establecida
                 "Inspección rutinaria completa sin incidencias mayores.",
                 null,
-                estadoCompletamenteRealizada,
+                estadoCompletamenteRealizada, // Estado final
                 estacionSismologicaB,
-                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
+                LocalDateTime.now().minusDays(5).minusHours(3) // Fecha de finalización
         );
-        ordenJuan1.agregarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoCompletamenteRealizada, fechaCierreJuan1, null, null));
-        repoOrdenes.insertar(ordenJuan1);
+        // Registrar el cambio de estado a COMPLETAMENTE_REALIZADA
+        ordenJuan1.registrarCambioEstado(new CambioEstado(empleadoRI_Juan, estadoAbierta, estadoCompletamenteRealizada, fechaCierreJuan1.minusHours(1), fechaCierreJuan1, null));
+        repoOrdenes.insertar(ordenJuan1); // Insertar la orden en el repositorio
 
         // Orden 2 para Juan (Abierta)
         OrdenDeInspeccion ordenJuan2 = new OrdenDeInspeccion(
                 numeroOrdenCounter++,
                 LocalDateTime.now().minusDays(2).minusHours(8),
-                empleadoRI_Juan,
-                null, // Es nulo porque la orden está abierta
+                empleadoRI_Juan, // Asignada a empleadoRI_Juan
+                null, // No cerrada aún
+                null, // No tiene observación de cierre
                 null,
-                null,
-                estadoAbierta,
+                estadoAbierta, // Estado inicial
                 estacionSismologicaA,
-                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
+                LocalDateTime.now().minusDays(1).minusHours(15) // Fecha de finalización (diferente)
         );
-        ordenJuan2.agregarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoAbierta, LocalDateTime.now().minusDays(2).minusHours(8), null, null));
-        repoOrdenes.insertar(ordenJuan2);
+        // Registrar el cambio de estado a ABIERTA
+        ordenJuan2.registrarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoAbierta, LocalDateTime.now().minusDays(2).minusHours(8), null, null));
+        repoOrdenes.insertar(ordenJuan2); // Insertar la orden en el repositorio
 
-        // Orden 3 para Juan (Abierta)
+        // Orden 3 para Juan (Completamente Realizada y lista para ser cerrada desde la UI)
         OrdenDeInspeccion ordenJuan3 = new OrdenDeInspeccion(
                 numeroOrdenCounter++,
                 LocalDateTime.now().minusDays(1).minusHours(3),
-                empleadoRI_Juan,
-                null, // Es nulo porque la orden está abierta
+                empleadoRI_Juan, // Asignada a empleadoRI_Juan
+                null, // No cerrada aún
+                null, // No tiene observación de cierre
                 null,
-                null,
-                estadoAbierta,
+                estadoAbierta, // Inicialmente Abierta
                 estacionSismologicaB,
-                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
+                LocalDateTime.now().minusHours(2) // Fecha de finalización
         );
-        ordenJuan3.agregarCambioEstado(new CambioEstado(empleadoRI_Juan, null, estadoAbierta, LocalDateTime.now().minusDays(1).minusHours(3), null, null));
-        repoOrdenes.insertar(ordenJuan3);
+        // Primero, registrar el cambio de ABIERTA a COMPLETAMENTE_REALIZADA
+        ordenJuan3.registrarCambioEstado(new CambioEstado(empleadoRI_Juan, estadoAbierta, estadoCompletamenteRealizada, LocalDateTime.now().minusHours(2).minusMinutes(5), LocalDateTime.now().minusHours(2), null));
+        // Luego, actualizar el estado actual de la orden directamente (se hace en tu gestor, pero para inicializar así lo hago aquí)
+        ordenJuan3.setEstado(estadoCompletamenteRealizada);
+        ordenJuan3.setFechaHoraFinalizacion(LocalDateTime.now().minusHours(2)); // Establece fecha de finalización
+        repoOrdenes.insertar(ordenJuan3); // Insertar la orden en el repositorio
+
+        // --- NUEVA ORDEN PARA JUAN (Completamente Realizada con otra fecha de finalización) ---
+        OrdenDeInspeccion ordenJuan4 = new OrdenDeInspeccion(
+                numeroOrdenCounter++,
+                LocalDateTime.now().minusDays(3).minusHours(7),
+                empleadoRI_Juan, // Asignada a empleadoRI_Juan
+                null, // No cerrada aún
+                null, // No tiene observación de cierre
+                null,
+                estadoAbierta, // Inicialmente Abierta
+                estacionSismologicaA,
+                LocalDateTime.now().minusDays(2).minusHours(18) // Fecha de finalización (diferente a las otras)
+        );
+        // Registrar el cambio de ABIERTA a COMPLETAMENTE_REALIZADA
+        ordenJuan4.registrarCambioEstado(new CambioEstado(empleadoRI_Juan, estadoAbierta, estadoCompletamenteRealizada, LocalDateTime.now().minusDays(2).minusHours(19), LocalDateTime.now().minusDays(2).minusHours(18), null));
+        ordenJuan4.setEstado(estadoCompletamenteRealizada);
+        ordenJuan4.setFechaHoraFinalizacion(LocalDateTime.now().minusDays(2).minusHours(18));
+        repoOrdenes.insertar(ordenJuan4);
 
 
-        // --- ÓRDENES PARA LAURA (0 órdenes) ---
-        // No se insertan órdenes para Laura aquí.
+        // --- ÓRDENES PARA LAURA (Empleado con legajo 2002) ---
+        // Orden 1 para Laura (CompletamenteRealizada)
+        OrdenDeInspeccion ordenLaura1 = new OrdenDeInspeccion(
+                numeroOrdenCounter++,
+                LocalDateTime.now().minusDays(6).minusHours(5),
+                empleadoRI_Laura, // Asignada a empleadoRI_Laura
+                null,
+                null,
+                null,
+                estadoCompletamenteRealizada,
+                estacionSismologicaA,
+                LocalDateTime.now().minusDays(5).minusHours(2) // Fecha de finalización
+        );
+        ordenLaura1.registrarCambioEstado(new CambioEstado(empleadoRI_Laura, estadoAbierta, estadoCompletamenteRealizada, LocalDateTime.now().minusDays(5).minusHours(3), LocalDateTime.now().minusDays(5).minusHours(2), null));
+        repoOrdenes.insertar(ordenLaura1);
 
 
-        // --- ÓRDENES PARA CARLOS (1 orden) ---
-        // Orden 1 para Carlos (Abierta)
-        MotivoFueraServicio mfsOrdenCarlos1 = new MotivoFueraServicio("Sensor de temperatura dañado", motivoFallaSensor);
-        List<MotivoFueraServicio> motivosOrdenCarlos1 = new ArrayList<>();
-        motivosOrdenCarlos1.add(mfsOrdenCarlos1);
-
+        // --- ÓRDENES PARA CARLOS (Empleado con legajo 3003) ---
         OrdenDeInspeccion ordenCarlos1 = new OrdenDeInspeccion(
                 numeroOrdenCounter++,
                 LocalDateTime.now().minusDays(7),
-                empleadoRI_Carlos,
-                null, // Se mantiene abierta por ahora, no se cierra en la inicialización
+                empleadoRI_Carlos, // Asignada a empleadoRI_Carlos
                 null,
                 null,
-                estadoAbierta,
+                null,
+                estadoCompletamenteRealizada, // Cambiado a COMPLETAMENTE_REALIZADA para que aparezca en el filtro
                 estacionSismologicaA,
-                fechaFinalizacionPorDefecto // <-- ¡Aquí está la fechaHoraFinalizacion como pediste!
+                LocalDateTime.now().minusDays(6).minusHours(10) // Fecha de finalización
         );
-        ordenCarlos1.agregarCambioEstado(new CambioEstado(empleadoRI_Carlos, null, estadoAbierta, LocalDateTime.now().minusDays(7), null, null));
+        ordenCarlos1.registrarCambioEstado(new CambioEstado(empleadoRI_Carlos, null, estadoAbierta, LocalDateTime.now().minusDays(7), null, null));
+        // Aseguramos que el estado esté correctamente seteado si lo queremos COMPLETAMENTE_REALIZADA
+        ordenCarlos1.setEstado(estadoCompletamenteRealizada);
+        ordenCarlos1.setFechaHoraFinalizacion(LocalDateTime.now().minusDays(6).minusHours(10));
         repoOrdenes.insertar(ordenCarlos1);
 
 

@@ -1,44 +1,41 @@
 package dsi.ppai;
 
-import dsi.ppai.services.GestorInspeccion;
-import dsi.ppai.services.Sesion;
-
+import dsi.ppai.ApplicationUI;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
-
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-
-import dsi.ppai.ApplicationUI; // Importación explícita para ApplicationUI
-
+import org.springframework.context.annotation.ComponentScan; // Importar ComponentScan
+import org.springframework.boot.autoconfigure.SpringBootApplication; // Importar SpringBootApplication
 
 @SpringBootApplication
 public class PpaiApplication extends Application {
 
-    private ConfigurableApplicationContext springContext;
-    private static String[] savedArgs;
+    private ConfigurableApplicationContext applicationContext;
 
-    public static void main(String[] args) {
-        savedArgs = args;
-        Application.launch(PpaiApplication.class, args);
+    @Override
+    public void init() {
+        applicationContext = new SpringApplicationBuilder(PpaiApplication.class)
+                .web(WebApplicationType.NONE)
+                .run();
     }
 
     @Override
-    public void init() throws Exception {
-        springContext = SpringApplication.run(PpaiApplication.class, savedArgs);
-    }
-
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-        ApplicationUI applicationUI = springContext.getBean(ApplicationUI.class);
-        applicationUI.start(primaryStage);
+    public void start(Stage primaryStage) {
+        // Obtener el bean de ApplicationUI del contexto de Spring
+        ApplicationUI applicationUI = applicationContext.getBean(ApplicationUI.class);
+        applicationUI.start(primaryStage); // Iniciar la UI de JavaFX
     }
 
     @Override
     public void stop() {
-        if (springContext != null) {
-            springContext.close();
-        }
+        applicationContext.close();
+        Platform.exit();
+    }
+
+    public static void main(String[] args) {
+        launch(PpaiApplication.class, args);
     }
 }

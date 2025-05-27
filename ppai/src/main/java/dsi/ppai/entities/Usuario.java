@@ -30,7 +30,7 @@ public class Usuario {
         this.empleado = empleado;
     }
 
-    
+
 
     public Usuario() {
         // Constructor vacío

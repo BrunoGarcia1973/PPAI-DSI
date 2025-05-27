@@ -3,7 +3,7 @@ package dsi.ppai.config;
 // import dsi.ppai.entities.Empleado; // No es estrictamente necesario aquí si no se usa
 // import dsi.ppai.entities.Rol; // No es estrictamente necesario aquí si no se usa
 import dsi.ppai.services.GestorInspeccion;
-import dsi.ppai.services.Sesion;
+import dsi.ppai.entities.Sesion;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

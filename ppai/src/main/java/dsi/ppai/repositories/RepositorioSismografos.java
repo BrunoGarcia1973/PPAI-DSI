@@ -1,42 +1,42 @@
 package dsi.ppai.repositories;
 
 import dsi.ppai.entities.Sismografo;
-import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger; // Importante: cambiamos a AtomicInteger
 
 @Component
 public class RepositorioSismografos {
 
-    private final Map<Long, Sismografo> sismografos = new HashMap<>();
+    private final Map<Integer, Sismografo> sismografos = new HashMap<>(); // Clave ahora es Integer
+    private final AtomicInteger nextId = new AtomicInteger(1); // Generador de IDs para Integer
 
-    @PostConstruct
-    public void init() {
-        System.out.println("Inicializando RepositorioSismografos...");
-        // Los sismógrafos se crearán y se les asignará un estado inicial en DatosInicialesService
-        // Este repositorio simplemente los almacenará cuando se inserten desde DatosInicialesService.
-    }
-
-    public void insertar(Sismografo sismografo) {
+    public void guardar(Sismografo sismografo) {
+        if (sismografo.getIdentificadorSismografo() == null) {
+            sismografo.setIdentificadorSismografo(nextId.getAndIncrement());
+        }
         sismografos.put(sismografo.getIdentificadorSismografo(), sismografo);
     }
 
-    public Sismografo buscarPorIdentificador(Long identificador) {
-        return sismografos.get(identificador);
+    public Sismografo buscar(Integer id) { // Buscar por Integer
+        return sismografos.get(id);
     }
 
     public List<Sismografo> buscarTodos() {
         return new ArrayList<>(sismografos.values());
     }
 
-    // Método para buscar por número de serie (usando el getter correcto de Lombok)
-    public Sismografo buscarPorNumeroDeSerie(Integer numeroSerie) {
+    public void eliminar(Integer id) { // Eliminar por Integer
+        sismografos.remove(id);
+    }
+
+    public Sismografo buscarPorNroSerie(Integer nroSerie) { // Buscar por Integer nroSerie
         return sismografos.values().stream()
-                .filter(s -> s.getNumeroSerie() != null && s.getNumeroSerie().equals(numeroSerie))
+                .filter(s -> s.getNroSerie() != null && s.getNroSerie().equals(nroSerie))
                 .findFirst()
                 .orElse(null);
     }
