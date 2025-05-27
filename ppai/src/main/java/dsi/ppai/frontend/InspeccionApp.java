@@ -1,69 +1,96 @@
+// dsi.ppai.frontend.InspeccionApp.java
+
 package dsi.ppai.frontend;
 
-import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-import org.springframework.context.ConfigurableApplicationContext; // Mantén este import
+import javafx.application.Application; // Importa la clase base de JavaFX Application
+import javafx.fxml.FXMLLoader; // Para cargar archivos FXML
+import javafx.scene.Parent; // Para la raíz del grafo de la escena
+import javafx.scene.Scene; // Para la escena principal
+import javafx.stage.Stage; // Para la ventana principal
+import org.springframework.context.ConfigurableApplicationContext; // Para el contexto de Spring
+import java.io.IOException; // Para manejar excepciones de entrada/salida
+import java.util.Objects; // Para la verificación de nulos (Objects.requireNonNull)
 
+/**
+ * Clase principal de la aplicación JavaFX que se integra con Spring Boot.
+ * Esta clase extiende javafx.application.Application y gestiona el ciclo de vida de la UI.
+ */
 public class InspeccionApp extends Application {
 
-    // Declaramos el contexto de Spring como estático para que PpaiApplication lo pueda establecer.
-    private static ConfigurableApplicationContext applicationContext;
+    // Campo estático para mantener una referencia al contexto de Spring Boot.
+    // Esto es necesario porque el método `launch()` de JavaFX es estático,
+    // y el contexto debe ser accesible antes de que se cree una instancia de InspeccionApp.
+    private static ConfigurableApplicationContext springContext;
 
-    // Nuevo método estático para que PpaiApplication pueda inyectar el contexto de Spring.
-    public static void setApplicationContext(ConfigurableApplicationContext context) {
-        InspeccionApp.applicationContext = context;
-        System.out.println("DEBUG (InspeccionApp): Contexto de Spring recibido por setter.");
+    /**
+     * Método estático para que la clase principal de Spring Boot (`PpaiApplication`)
+     * pueda establecer el contexto de Spring *antes* de que JavaFX inicie la aplicación.
+     * @param context El contexto de aplicación de Spring Boot.
+     */
+    public static void setApplicationContextStatic(ConfigurableApplicationContext context) {
+        InspeccionApp.springContext = context;
+        System.out.println("DEBUG (InspeccionApp): Contexto de Spring estático establecido.");
     }
 
+    /**
+     * Método de inicialización de la aplicación JavaFX.
+     * Se llama antes de `start()`. Aquí verificamos que el contexto de Spring ya esté disponible.
+     */
     @Override
-    public void init() {
+    public void init() throws Exception {
         System.out.println("DEBUG (InspeccionApp): Entrando al método init().");
-        // Ya NO necesitamos inicializar Spring Boot aquí.
-        // Se hace en PpaiApplication.main() y se pasa a través de setApplicationContext().
-        if (applicationContext == null) {
-            System.err.println("ERROR (InspeccionApp): ¡El contexto de Spring no se ha establecido correctamente en init()!");
-            // Esto es un error crítico, salimos si el contexto no está disponible.
-            System.exit(1);
-        }
+        // Asegurarse de que el contexto de Spring fue establecido por PpaiApplication.main
+        Objects.requireNonNull(springContext, "El contexto de Spring debe establecerse antes de que se llame a init().");
         System.out.println("DEBUG (InspeccionApp): Contexto de Spring disponible en init().");
+        // No llamamos a SpringApplication.run() aquí, ya que se hizo en PpaiApplication.main
+        // y el contexto ya está inyectado a través del método estático.
     }
 
+    /**
+     * Método principal para iniciar la interfaz de usuario de JavaFX.
+     * @param primaryStage El Stage (ventana principal) proporcionado por JavaFX.
+     * @throws IOException Si ocurre un error al cargar el archivo FXML.
+     */
     @Override
-    public void start(Stage primaryStage) throws Exception {
+    public void start(Stage primaryStage) throws IOException {
         System.out.println("DEBUG (InspeccionApp): Entrando al método start().");
-        // Carga el archivo FXML para la pantalla inicial
+
+        // Crea un FXMLLoader para cargar el archivo FXML de la interfaz principal.
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/fxml/main_screen.fxml"));
-        // Usamos el contexto estático para que Spring inyecte las dependencias en los controladores FXML.
-        fxmlLoader.setControllerFactory(applicationContext::getBean);
+
+        // Configura el ControllerFactory del FXMLLoader para que Spring cree las instancias
+        // de los controladores FXML. Esto permite la inyección de dependencias de Spring en ellos.
+        fxmlLoader.setControllerFactory(springContext::getBean);
+
+        // Carga el grafo de la escena desde el FXML.
         Parent root = fxmlLoader.load();
-        System.out.println("DEBUG (InspeccionApp): FXML cargado exitosamente. Mostrando ventana...");
 
-        primaryStage.setTitle("Gestor de Inspección");
+        // Configura el título de la ventana.
+        primaryStage.setTitle("PPAI - Cerrar Orden de Inspección");
+        // Establece la escena en la ventana principal con las dimensiones deseadas.
         primaryStage.setScene(new Scene(root, 800, 600));
+        // Muestra la ventana.
         primaryStage.show();
-        System.out.println("DEBUG (InspeccionApp): Ventana mostrada.");
     }
 
+    /**
+     * Método de parada de la aplicación JavaFX.
+     * Se llama cuando la aplicación se va a cerrar. Aquí cerramos el contexto de Spring.
+     */
     @Override
-    public void stop() {
+    public void stop() throws Exception {
         System.out.println("DEBUG (InspeccionApp): Entrando al método stop(). Cerrando contexto de Spring.");
-        // Cierra el contexto de Spring Boot cuando la aplicación JavaFX se detiene.
-        if (applicationContext != null && applicationContext.isActive()) {
-            applicationContext.close();
+        // Cierra el contexto de Spring para liberar recursos.
+        if (springContext != null) {
+            springContext.close();
         }
-        // No llamar a System.exit(0) aquí. Deja que el hilo principal (PpaiApplication) termine.
+        System.out.println("DEBUG (InspeccionApp): Contexto de Spring cerrado.");
     }
 
-    // El método main() en InspeccionApp ya no es el punto de entrada principal para la aplicación combinada.
-    // Solo es útil si quieres ejecutar InspeccionApp como una aplicación JavaFX independiente (sin Spring Boot).
-    public static void main(String[] args) {
-        System.out.println("DEBUG (InspeccionApp): Entrando al main() de InspeccionApp (uso alternativo/standalone).");
-        // Si se ejecuta este main directamente, 'applicationContext' será null, así que ten cuidado.
-        // Es preferible que PpaiApplication sea el punto de entrada.
-        launch(args);
-        System.out.println("DEBUG (InspeccionApp): launch() ha terminado en main() de InspeccionApp.");
-    }
+    // El método `main` ya NO se define aquí.
+    // El punto de entrada principal es `PpaiApplication.main()`.
+    // Si tienes un `main` aquí, bórralo o coméntalo para evitar confusiones.
+
+    // El setter `setApplicationContext` de instancia ya NO se necesita.
+    // El contexto se pasa a través del método estático `setApplicationContextStatic`.
 }

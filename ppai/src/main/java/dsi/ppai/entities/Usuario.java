@@ -1,42 +1,33 @@
 package dsi.ppai.entities;
 
-import org.springframework.stereotype.Component;
+import lombok.*;
 
-@Component
+@Data
+@NoArgsConstructor
+@Getter
+@Setter
+ // Opcional, si quieres un constructor con todos los campos
 public class Usuario {
-    private String nombreUsuario;
-    private Empleado empleado;
+    private String nombre;
+    private String password;
+    private Empleado empleado; // <--- ¡Añade esto! Relación con Empleado
 
-    // Constructor, getters y setters
-
-    public Empleado obtenerEmpleado() {
-        return empleado;
-    }
-
-    public void setEmpleado(Empleado empleado) {
+    // Constructor si no usas @AllArgsConstructor
+    public Usuario(String nombre, String password, Empleado empleado) {
+        this.nombre = nombre;
+        this.password = password;
         this.empleado = empleado;
     }
 
-    public String getNombreUsuario() {
-        return nombreUsuario;
-    }
-
-    public void setNombreUsuario(String nombreUsuario) {
-        this.nombreUsuario = nombreUsuario;
-    }
-
-    public Usuario(String nombreUsuario, Empleado empleado) {
-        this.nombreUsuario = nombreUsuario;
-        this.empleado = empleado;
-    }
-
-    
-
-    public Usuario() {
-        // Constructor vacío
-    }
-
+    // Método para obtener el empleado asociado al usuario
     public Empleado getEmpleado() {
         return this.empleado;
+    }
+
+    public boolean esResponsableDeInspeccion() {
+        // Implementa la lógica para determinar si el usuario es RI
+        // Por ejemplo, basándote en el rol del empleado o una propiedad del usuario
+        return this.empleado != null && this.empleado.getRol().equals("Responsable de Inspeccion");
+        // O si tienes un rol en Usuario: return this.rol.equals("Responsable de Inspeccion");
     }
 }

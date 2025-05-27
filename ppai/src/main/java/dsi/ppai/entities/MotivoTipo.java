@@ -1,22 +1,28 @@
 package dsi.ppai.entities;
 
-import lombok.Getter;
-import lombok.Setter;
+// import lombok.Getter; // @Data ya incluye @Getter
+// import lombok.Setter; // @Data ya incluye @Setter
+import lombok.Data; // Usamos @Data para getters, setters, equals, hashCode, toString
+import lombok.NoArgsConstructor; // Constructor sin argumentos (si lo necesitas)
+import lombok.AllArgsConstructor; // Opcional, pero si tienes todos los campos, es útil
 
-import java.util.ArrayList;
-import java.util.List;
+// Importante: Eliminar la lista 'motivos' de aquí.
+// MotivoTipo debe ser solo la definición del tipo de motivo, no una colección de instancias.
 
-@Getter
-@Setter
+@Data // Proporciona getters, setters, equals, hashCode, toString por defecto
+@NoArgsConstructor // Para constructor sin argumentos si es necesario
+@AllArgsConstructor // Genera un constructor con todos los campos declarados (id, descripcion, detalle)
 public class MotivoTipo {
-
+    private Integer id; // Añade el ID
     private String descripcion;
-    private final List<MotivoFueraServicio> motivos = new ArrayList<>();
+    private String detalle; // Añade el detalle
 
-    public MotivoTipo(String descripcion) {
-        this.descripcion = descripcion;
-    }
-    public void agregarMotivo(MotivoFueraServicio motivo) {
-        motivos.add(motivo);
-    }
+    // Si usas @AllArgsConstructor, este constructor manual no es estrictamente necesario,
+    // pero lo puedes dejar para mayor claridad o si quieres un constructor específico
+
+    // ELIMINAR: La lista 'motivos' y el método 'agregarMotivo'
+    // private final List<MotivoFueraServicio> motivos = new ArrayList<>();
+    // public void agregarMotivo(MotivoFueraServicio motivo) {
+    //     motivos.add(motivo);
+    // }
 }

@@ -40,8 +40,9 @@ public class InspeccionRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Instanciar sismografos
         /*
+        // Instanciar sismografos
+
         Sismografo sismografoA = new Sismografo();
         sismografoA.setIdentificadorSismografo(32149);
         sismografoA.setNroSerie(12345632);
@@ -312,8 +313,8 @@ public class InspeccionRunner implements CommandLineRunner {
         }
 
         scanner.close();
+        */
 
-         */
     }
 
 }

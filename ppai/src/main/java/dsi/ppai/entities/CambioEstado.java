@@ -1,24 +1,30 @@
 package dsi.ppai.entities;
 
-import lombok.AllArgsConstructor;
+import lombok.AllArgsConstructor; // ¡QUITAR ESTO SI USAS @Data y tienes campos 'final' con constructor manual!
 import lombok.Data;
-import lombok.Getter;
+// import lombok.Getter; // Ya no es necesario si eliminas el campo problemático
+
 import java.time.LocalDateTime;
+import java.util.ArrayList; // Para inicializar la lista en el constructor
 import java.util.List;
 
 /**
- * Representa el cambio de estado de una OrdenDeInspeccion,
+ * Representa el cambio de estado de una OrdenDeInspeccion o Sismografo,
  * incluyendo el estado anterior, el nuevo estado, timestamps y motivos.
  */
-@Data
-
+@Data // Proporciona getters, setters, equals, hashCode, toString
+// @AllArgsConstructor // <-- QUITAR ESTO SI MANTIENES EL CONSTRUCTOR MANUAL Y CAMPOS FINAL.
+//    Lombok y 'final' + constructor manual pueden causar conflictos.
+//    Si quieres un constructor sin argumentos, usa @NoArgsConstructor
+//    Si quieres un constructor con todos los args y sin campos final, puedes dejar @AllArgsConstructor
+//    Para simplificar, usaremos un constructor manual y @Data para los getters.
 public class CambioEstado {
-    private final Empleado empleado;
-    private final Estado estadoAnterior;
-    private final Estado estadoNuevo;
-    private final LocalDateTime fechaHoraInicio;
-    private LocalDateTime fechaHoraFin;
-    private final List<MotivoFueraServicio> motivosSeleccionados;
+    private final Empleado empleado; // Campo final
+    private final Estado estadoAnterior; // Campo final
+    private final Estado estadoNuevo; // Campo final
+    private final LocalDateTime fechaHoraInicio; // Campo final
+    private LocalDateTime fechaHoraFin; // No es final, se modifica al cerrar
+    private final List<MotivoFueraServicio> motivosSeleccionados; // Campo final
 
     /**
      * Constructor completo. Fecha de fin puede ser null si el cambio está activo.
@@ -36,7 +42,8 @@ public class CambioEstado {
         this.estadoNuevo = estadoNuevo;
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
-        this.motivosSeleccionados = motivosSeleccionados;
+        // Asegúrate de que la lista se inicialice correctamente para evitar NullPointerException si se usa
+        this.motivosSeleccionados = motivosSeleccionados != null ? new ArrayList<>(motivosSeleccionados) : new ArrayList<>();
     }
 
     /**
@@ -50,18 +57,16 @@ public class CambioEstado {
             Estado estadoAnterior,
             List<MotivoFueraServicio> motivosFueraServicio
     ) {
-        Estado nuevo = new Estado("FueraDeServicio");
+        Estado nuevo = new Estado("FueraDeServicio"); // Asume que este Estado es válido o lo buscas
         return new CambioEstado(
                 empleado,
                 estadoAnterior,
                 nuevo,
                 LocalDateTime.now(),
-                null,
+                null, // Fecha de fin nula para indicar que está activo
                 motivosFueraServicio
-
         );
     }
-
 
     /**
      * Marca este cambio como cerrado, fijando la fechaHoraFin al instante actual.
@@ -71,18 +76,12 @@ public class CambioEstado {
     }
 
     /**
-     * Devuelve true si el cambio aún no fue cerrado (fechaHoraFin == null).
+     * Devuelve true si el cambio aún no fue cerrado (fechaHoraFin == null), indicando que es el estado actual.
      */
-    public boolean esCambioActivo() {
+    public boolean esEstadoActual() {
         return this.fechaHoraFin == null;
     }
 
-    public Boolean esEstadoActual() {
-        return this.fechaHoraFin == null;
-    }
-    @Getter
-    private List<MotivoTipo> motivos;
-
-// ...
-
+    // ¡¡¡CAMPO ELIMINADO: @Getter private List<MotivoTipo> motivos;!!!
+    // Este campo era redundante y causaba el problema de compilación.
 }
