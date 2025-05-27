@@ -116,7 +116,7 @@ public class DatosInicialesService {
                 LocalDateTime.now().minusDays(5).minusHours(10),
                 empleadoRI_Juan,
                 fechaCierreJuan1,
-                "Inspección rutinaria completa sin incidencias mayores.",
+                "",
                 null,
                 estadoCompletamenteRealizada,
                 estacionSismologicaB,

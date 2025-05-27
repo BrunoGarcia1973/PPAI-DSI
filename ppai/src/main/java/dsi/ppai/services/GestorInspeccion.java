@@ -31,7 +31,7 @@ public class GestorInspeccion {
         }
 
         return repoOrdenes
-                .buscarOrdenesInspeccionDeRI(empleado.getLegajo()) // Este método ya filtra por legajo
+                .buscarOrdenesInspeccionDeRI(empleado.getLegajo())
                 .stream()
                 .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
                 .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
@@ -48,7 +48,7 @@ public class GestorInspeccion {
             return List.of();
         }
 
-        return repoOrdenes.findAll().stream() // Ahora el método se llama findAll()
+        return repoOrdenes.findAll().stream()
                 .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
                 .filter(orden -> orden.sosDeEmpleado(empleado))
                 .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
@@ -110,12 +110,16 @@ public class GestorInspeccion {
 
         // 7) Guardar la orden actualizada
         repoOrdenes.insertar(orden);
+
+        //public void enviarCorreos(Empleado empleado){
+
+        //}
     }
 
-    public Empleado obtenerEmpleadoLogueado() {
+   /* public Empleado obtenerEmpleadoLogueado() {
         if (sesion == null) {
             throw new IllegalStateException("No hay sesión activa.");
         }
         return sesion.obtenerEmpleadoLogueado();
-    }
+    }*/
 }

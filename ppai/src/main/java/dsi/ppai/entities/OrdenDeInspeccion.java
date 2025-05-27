@@ -46,17 +46,6 @@ public class OrdenDeInspeccion {
                 this.empleado.getLegajo().equals(empleado.getLegajo());
     }
 
-    /**
-     * Pone el sismógrafo asociado a la estación en "FUERA_DE_SERVICIO".
-     * Delega la responsabilidad al sismógrafo.
-     *
-     * @param motivos Los motivos por los cuales el sismógrafo será puesto fuera de servicio.
-     * @param empleadoLogueado El empleado que realiza la acción (necesario para el registro del CambioEstado).
-     * @param estadoFueraDeServicio El objeto Estado "FUERA_DE_SERVICIO".
-     * NOTA: La clase Sismografo no utiliza este objeto directamente
-     * porque crea el estado "FUERA_DE_SERVICIO" internamente.
-     * Lo mantenemos en la firma para consistencia con la llamada del Gestor.
-     */
     public void ponerFueraDeServicio(List<MotivoFueraServicio> motivos, Empleado empleadoLogueado, Estado estadoFueraDeServicio) {
         if (this.estacionSismologica == null || this.estacionSismologica.getSismografo() == null) {
             throw new IllegalStateException("La orden no tiene una estación o sismógrafo asociado para marcar fuera de servicio.");

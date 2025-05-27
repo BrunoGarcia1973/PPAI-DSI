@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors; // Asegúrate de importar esto
 
 @Component
-public class ApplicationUI {
+public class InterfazInspeccion {
 
     private final GestorInspeccion gestorInspeccion;
     private final Sesion sesion;
@@ -42,7 +42,7 @@ public class ApplicationUI {
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Autowired
-    public ApplicationUI(GestorInspeccion gestorInspeccion, Sesion sesion, RepositorioEmpleados repoEmpleados) {
+    public InterfazInspeccion(GestorInspeccion gestorInspeccion, Sesion sesion, RepositorioEmpleados repoEmpleados) {
         this.gestorInspeccion = gestorInspeccion;
         this.sesion = sesion;
         this.repoEmpleados = repoEmpleados;
@@ -193,11 +193,11 @@ public class ApplicationUI {
             if (empleadoSeleccionado == null) {
                 // Si no hay un empleado seleccionado en el ComboBox, se muestran las del RI logueado
                 ordenes = gestorInspeccion.buscarOrdenesInspeccionDeRI();
-                showAlert(Alert.AlertType.INFORMATION, "Información", "Mostrando órdenes para el Responsable de Inspección logueado: " + sesion.obtenerEmpleadoLogueado().getNombre() + " " + sesion.obtenerEmpleadoLogueado().getApellido());
+                //showAlert(Alert.AlertType.INFORMATION, "Información", "Mostrando órdenes para el Responsable de Inspección logueado: " + sesion.obtenerEmpleadoLogueado().getNombre() + " " + sesion.obtenerEmpleadoLogueado().getApellido());
             } else {
                 // Si hay un empleado seleccionado, se buscan sus órdenes usando el nuevo método
                 ordenes = gestorInspeccion.buscarOrdenesDeInspeccionDeRI(empleadoSeleccionado);
-                showAlert(Alert.AlertType.INFORMATION, "Información", "Mostrando órdenes para: " + empleadoSeleccionado.getNombre() + " " + empleadoSeleccionado.getApellido());
+                //showAlert(Alert.AlertType.INFORMATION, "Información", "Mostrando órdenes para: " + empleadoSeleccionado.getNombre() + " " + empleadoSeleccionado.getApellido());
             }
 
             observableOrdenes = FXCollections.observableArrayList(ordenes);
@@ -324,7 +324,7 @@ public class ApplicationUI {
         for (MotivoTipo motivo : motivosDisponibles) {
             CheckBox chkMotivo = new CheckBox(motivo.getDescripcion());
             TextField txtComentario = new TextField();
-            txtComentario.setPromptText("Comentario (opcional)");
+            txtComentario.setPromptText("Comentario");
             txtComentario.setDisable(true);
 
             chkMotivo.selectedProperty().addListener((obs, oldVal, newVal) -> txtComentario.setDisable(!newVal));
