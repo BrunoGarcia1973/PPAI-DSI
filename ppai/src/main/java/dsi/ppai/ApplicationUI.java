@@ -36,11 +36,9 @@ public class ApplicationUI {
     private final Sesion sesion;
     private final RepositorioEmpleados repoEmpleados;
     private ObservableList<OrdenDeInspeccion> observableOrdenes;
-
     private TableView<OrdenDeInspeccion> tablaOrdenes;
     private Label labelUsuarioLogueado;
     private ComboBox<Empleado> cmbEmpleados; // Nuevo ComboBox para seleccionar empleados
-
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Autowired
@@ -51,7 +49,6 @@ public class ApplicationUI {
     }
 
     public void start(Stage primaryStage) {
-        // --- SIMULACIÓN DE LOGIN ---
         simularLogin("1001"); // Logueamos a Juan Pérez (legajo 1001)
 
         primaryStage.setTitle("Sistema de Cierre de Órdenes de Inspección");
@@ -59,7 +56,6 @@ public class ApplicationUI {
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
 
-        // --- Top Section: User Info ---
         labelUsuarioLogueado = new Label("Usuario: No logueado");
         if (sesion.obtenerEmpleadoLogueado() != null) {
             labelUsuarioLogueado.setText("Usuario: " + sesion.obtenerEmpleadoLogueado().getNombre() + " (Legajo: " + sesion.obtenerEmpleadoLogueado().getLegajo() + ")");
@@ -71,13 +67,11 @@ public class ApplicationUI {
         // --- Filter Section: Employee Selection ---
         HBox filterBox = new HBox(10);
         filterBox.setAlignment(Pos.CENTER_LEFT);
-        filterBox.setPadding(new Insets(0, 0, 10, 0)); // Espacio entre el user info y el filtro
-
+        filterBox.setPadding(new Insets(0, 0, 10, 0));
         Label lblSelectEmployee = new Label("Ver órdenes de:");
         cmbEmpleados = new ComboBox<>();
         cargarEmpleadosEnComboBox(); // Cargar la lista de empleados
         cmbEmpleados.setPromptText("Seleccione un Empleado"); // Texto por defecto
-
         // Listener para cuando se selecciona un empleado
         cmbEmpleados.valueProperty().addListener((obs, oldVal, newVal) -> {
             cargarOrdenes(newVal); // Recargar la tabla con el empleado seleccionado
@@ -87,29 +81,23 @@ public class ApplicationUI {
 
         VBox topCombinedBox = new VBox(5, topBox, filterBox); // Combinar info de usuario y filtro
         root.setTop(topCombinedBox);
-
         // --- Center Section: Orders Table ---
         tablaOrdenes = new TableView<>();
         setupTablaOrdenes();
         root.setCenter(tablaOrdenes);
-
         // --- Bottom Section: Buttons ---
         Button btnCerrarOrden = new Button("Cerrar Orden Seleccionada");
         btnCerrarOrden.setOnAction(e -> iniciarCierreOrdenInspeccion());
-
         Button btnSalir = new Button("Salir");
         btnSalir.setOnAction(e -> Platform.exit());
-
         HBox bottomBox = new HBox(10, btnCerrarOrden, btnSalir);
         bottomBox.setPadding(new Insets(10, 0, 0, 0));
         bottomBox.setAlignment(Pos.CENTER_RIGHT);
         root.setBottom(bottomBox);
-
         Scene scene = new Scene(root, 900, 600);
         primaryStage.setScene(scene);
         primaryStage.show();
-
-        // Cargar órdenes inicialmente para el usuario logueado (sin selección en ComboBox)
+        // Cargar órdenes inicialmente para el usuario logueado
         cargarOrdenes(null);
     }
 
@@ -172,13 +160,11 @@ public class ApplicationUI {
         tablaOrdenes.getColumns().addAll(colNumOrden, colEstacion, colSismografoId, colEstado, colFechaFin, colObservacionCierre);
     }
 
-    // Nuevo método para cargar todos los empleados en el ComboBox
+    // Método para cargar todos los empleados en el ComboBox
     private void cargarEmpleadosEnComboBox() {
         try {
-            // Usa el nuevo método findAll() del repositorio
             List<Empleado> todosLosEmpleados = repoEmpleados.findAll();
 
-            // Para mostrar el nombre completo en el ComboBox
             cmbEmpleados.setCellFactory(lv -> new ListCell<Empleado>() {
                 @Override
                 protected void updateItem(Empleado empleado, boolean empty) {
@@ -194,19 +180,13 @@ public class ApplicationUI {
                 }
             });
 
-            // Opcional: añadir una opción "Todos" al principio (esto requeriría que el objeto "Todos" sea manejable)
-            // Empleado todosEmpleados = new Empleado("ALL", "Todos los", "Empleados", null, null, null);
-            // cmbEmpleados.getItems().add(0, todosEmpleados); // Añadir al principio si se quiere esta opción
-
             cmbEmpleados.setItems(FXCollections.observableArrayList(todosLosEmpleados));
-
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Error al Cargar Empleados", "No se pudieron cargar los empleados: " + e.getMessage());
             e.printStackTrace();
         }
     }
-
-    // Método de carga de órdenes modificado para aceptar un Empleado
+    // Método de carga de órdenes
     private void cargarOrdenes(Empleado empleadoSeleccionado) {
         try {
             List<OrdenDeInspeccion> ordenes;
@@ -236,22 +216,18 @@ public class ApplicationUI {
         }
     }
 
-
     private void iniciarCierreOrdenInspeccion() {
         OrdenDeInspeccion ordenSeleccionada = tablaOrdenes.getSelectionModel().getSelectedItem();
-
         if (ordenSeleccionada == null) {
             showAlert(Alert.AlertType.WARNING, "Advertencia", "Por favor, seleccione una orden de inspección de la tabla.");
             return;
         }
-
-        // Importante: Solo se pueden cerrar órdenes que estén 'Completamente Realizadas'
+        // Solo se pueden cerrar órdenes que estén 'Completamente Realizadas'
         if (!ordenSeleccionada.sosCompletamenteRealizada()) {
             showAlert(Alert.AlertType.ERROR, "Error de Estado", "La orden seleccionada no está 'Completamente Realizada' y no puede ser cerrada.");
             return;
         }
 
-        // --- Custom Dialog for Observation ---
         Dialog<String> dialogObservacion = new Dialog<>();
         dialogObservacion.setTitle("Cerrar Orden de Inspección");
         dialogObservacion.setHeaderText("Cierre de Orden Nº " + ordenSeleccionada.getNumOrden());
@@ -264,13 +240,12 @@ public class ApplicationUI {
         TextArea textArea = new TextArea();
         textArea.setPromptText("Observación");
         textArea.setWrapText(true);
-        textArea.setPrefRowCount(5); // Adjust this value to make it taller
-        textArea.setPrefColumnCount(30); // Adjust this value to make it wider
+        textArea.setPrefRowCount(5);
+        textArea.setPrefColumnCount(30);
 
         content.getChildren().addAll(label, textArea);
         dialogObservacion.getDialogPane().setContent(content);
 
-        // Request focus on the text area by default.
         Platform.runLater(textArea::requestFocus);
 
         dialogObservacion.setResultConverter(dialogButton -> {
@@ -287,18 +262,15 @@ public class ApplicationUI {
             return;
         }
         String observacion = resultObservacion.get().trim();
-        // --- End Custom Dialog for Observation ---
-
 
         List<MotivoTipo> motivosDisponibles = gestorInspeccion.buscarTiposMotivosFueraDeServicios();
         List<MotivoFueraServicio> motivosParaSismografo = showMotivosDialog(motivosDisponibles);
 
-        // Si el usuario cancela el diálogo de motivos (resulta en null o lista vacía si deselecciona todo)
-        if (motivosParaSismografo == null) { // Si el usuario cancela el diálogo de motivos
+        // Si el usuario cancela el diálogo de motivos
+        if (motivosParaSismografo == null) {
             showAlert(Alert.AlertType.INFORMATION, "Información", "Operación de cierre de orden cancelada.");
             return;
         }
-
 
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmAlert.setTitle("Confirmar Cierre de Orden");
@@ -397,7 +369,7 @@ public class ApplicationUI {
         });
 
         btnCancelar.setOnAction(e -> {
-            resultMotivos.set(null); // Indica que el usuario canceló
+            resultMotivos.set(null);
             dialogStage.close();
         });
 
@@ -412,7 +384,6 @@ public class ApplicationUI {
 
         return resultMotivos.get(); // Retorna la lista de motivos o null si se canceló
     }
-
 
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);

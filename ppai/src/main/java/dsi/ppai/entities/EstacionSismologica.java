@@ -18,8 +18,6 @@ public class EstacionSismologica {
     private LocalDate fechaSolicitudCertificacion;
     private Sismografo sismografo; // Referencia al Sismografo asociado
 
-    // Getter explícito para sismografo, aunque Lombok @Data ya lo crea,
-    // lo mantengo para claridad en el diagrama de clases.
     public Sismografo getSismografo() {
         return this.sismografo;
     }

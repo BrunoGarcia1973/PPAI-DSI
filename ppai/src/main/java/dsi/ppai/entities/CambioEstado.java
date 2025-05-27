@@ -15,8 +15,8 @@ public class CambioEstado {
     private Estado estadoAnterior;
     private Estado estadoNuevo;
     private LocalDateTime fechaHoraInicio;
-    private LocalDateTime fechaHoraFin; // Puede ser null si es el estado actual
-    private List<MotivoFueraServicio> motivosSeleccionados; // Para cambios a "FUERA_DE_SERVICIO"
+    private LocalDateTime fechaHoraFin;
+    private List<MotivoFueraServicio> motivosSeleccionados;
 
     // Constructor principal usado por entidades y DatosInicialesService
     public CambioEstado(Empleado empleado, Estado estadoAnterior, Estado estadoNuevo, LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, List<MotivoFueraServicio> motivosSeleccionados) {
@@ -25,7 +25,6 @@ public class CambioEstado {
         this.estadoNuevo = estadoNuevo;
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
-        // Asegurarse de que la lista no sea null y sea mutable si se va a modificar
         this.motivosSeleccionados = (motivosSeleccionados != null) ? new ArrayList<>(motivosSeleccionados) : new ArrayList<>();
     }
 
@@ -43,25 +42,21 @@ public class CambioEstado {
             Estado estadoAnterior,
             List<MotivoFueraServicio> motivosFueraServicio
     ) {
-        // En un entorno real, el Estado "FUERA_DE_SERVICIO" se obtendría del RepositorioEstados.
-        // Aquí lo creamos directamente para simplificar la inicialización, asumiendo su existencia.
         Estado estadoFueraDeServicio = new Estado("FUERA_DE_SERVICIO");
         return new CambioEstado(
                 empleado,
                 estadoAnterior,
                 estadoFueraDeServicio,
                 LocalDateTime.now(),
-                null, // Fecha de fin es nula porque es el estado actual
+                null,
                 motivosFueraServicio
         );
     }
 
-    // TU MÉTODO ORIGINAL
     public boolean esEstadoActual() {
         return this.fechaHoraFin == null;
     }
 
-    // Si también tenías este método, lo mantengo.
     public void cerrarCambio() {
         this.fechaHoraFin = LocalDateTime.now();
     }

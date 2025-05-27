@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 @NoArgsConstructor
 public class MotivoFueraServicio {
     private String comentario;
-    private MotivoTipo motivoTipo; // Relación con MotivoTipo
+    private MotivoTipo motivoTipo;
 
     public MotivoFueraServicio(String comentario, MotivoTipo motivoTipo) {
         this.comentario = comentario;

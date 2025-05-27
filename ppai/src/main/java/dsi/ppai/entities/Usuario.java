@@ -7,8 +7,6 @@ public class Usuario {
     private String nombreUsuario;
     private Empleado empleado;
 
-    // Constructor, getters y setters
-
     public Empleado obtenerEmpleado() {
         return empleado;
     }
@@ -30,10 +28,7 @@ public class Usuario {
         this.empleado = empleado;
     }
 
-
-
     public Usuario() {
-        // Constructor vacío
     }
 
     public Empleado getEmpleado() {

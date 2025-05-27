@@ -12,11 +12,11 @@ import java.util.List;
 @AllArgsConstructor
 public class MotivoTipo {
     private String descripcion;
-    private List<MotivoFueraServicio> motivos; // Relación con MotivoFueraServicio (opcional)
+    private List<MotivoFueraServicio> motivos;
 
     public MotivoTipo(String descripcion) {
         this.descripcion = descripcion;
-        this.motivos = new ArrayList<>(); // Inicializar la lista
+        this.motivos = new ArrayList<>();
     }
 
     public void agregarMotivo(MotivoFueraServicio motivo) {

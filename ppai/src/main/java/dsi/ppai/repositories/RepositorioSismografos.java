@@ -12,8 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger; // Importante: cambiamos a Ato
 @Component
 public class RepositorioSismografos {
 
-    private final Map<Integer, Sismografo> sismografos = new HashMap<>(); // Clave ahora es Integer
-    private final AtomicInteger nextId = new AtomicInteger(1); // Generador de IDs para Integer
+    private final Map<Integer, Sismografo> sismografos = new HashMap<>();
+    private final AtomicInteger nextId = new AtomicInteger(1);
 
     public void guardar(Sismografo sismografo) {
         if (sismografo.getIdentificadorSismografo() == null) {

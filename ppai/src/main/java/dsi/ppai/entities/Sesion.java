@@ -6,25 +6,21 @@ import org.springframework.stereotype.Component;
 @NoArgsConstructor
 @Data
 
-// Se registra como bean de Spring
 public class Sesion {
     private Usuario usuarioLogueado;
 
     public Sesion(Usuario usuario) {
-        this.usuarioLogueado = usuario; // ¡Aquí asignamos el usuario!
+        this.usuarioLogueado = usuario;
     }
 
-    /** Inyecta el usuario tras el login */
     public void setUsuarioLogueado(Usuario usuario) {
         this.usuarioLogueado = usuario;
     }
 
-    /** Devuelve el usuario actualmente logueado */
     public Usuario getUsuarioLogueado() {
         return usuarioLogueado;
     }
 
-    /** Devuelve el Empleado asociado al usuario logueado */
     public Empleado obtenerEmpleadoLogueado() {
         if (usuarioLogueado == null) {
             throw new IllegalStateException("No hay un usuario logueado.");

@@ -16,7 +16,6 @@ public class RepositorioMotivoTipo {
     private final Map<String, MotivoTipo> motivosTipo = new HashMap<>();
 
     public RepositorioMotivoTipo() {
-        // Motivos que se buscan en DatosInicialesService y se usan en la UI
         MotivoTipo mantenimiento = new MotivoTipo("Mantenimiento");
         MotivoTipo calibracion = new MotivoTipo("Calibracion");
         MotivoTipo fallaSensor = new MotivoTipo("Falla de Sensor");
@@ -25,7 +24,6 @@ public class RepositorioMotivoTipo {
         MotivoTipo software = new MotivoTipo("Problema de software");
         MotivoTipo hardware = new MotivoTipo("Falla de hardware");
         MotivoTipo vandalismo = new MotivoTipo("Acto de vandalismo");
-
 
         motivosTipo.put(mantenimiento.getDescripcion(), mantenimiento);
         motivosTipo.put(calibracion.getDescripcion(), calibracion);
