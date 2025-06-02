@@ -289,7 +289,7 @@ public class InterfazInspeccion {
         Optional<ButtonType> confirmResult = confirmAlert.showAndWait();
         if (confirmResult.isPresent() && confirmResult.get() == ButtonType.OK) {
             try {
-                gestorInspeccion.cerrarOrden(ordenSeleccionada.getNumOrden(), observacion, motivosParaSismografo);
+                gestorInspeccion.cerrarOrden(ordenSeleccionada, observacion, motivosParaSismografo);
                 // Después de cerrar, recargar para el empleado que estaba seleccionado (o el logueado)
                 cargarOrdenes(cmbEmpleados.getSelectionModel().getSelectedItem());
                 showAlert(Alert.AlertType.INFORMATION, "Éxito", "Orden de Inspección Nº " + ordenSeleccionada.getNumOrden() + " cerrada exitosamente.");

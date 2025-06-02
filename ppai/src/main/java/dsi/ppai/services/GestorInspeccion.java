@@ -47,15 +47,19 @@ public class GestorInspeccion {
             System.out.println("Advertencia: Se intentó buscar órdenes para un empleado nulo.");
             return List.of();
         }
-
-        return repoOrdenes.findAll().stream()
-                .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
-                .filter(orden -> orden.sosDeEmpleado(empleado))
+        List<OrdenDeInspeccion> ordenes = repoOrdenes.findAll();
+        ordenes = ordenes.stream()
+                .filter(o -> o.sosDeEmpleado(empleado))
+                .peek(o -> {
+                    if (!o.sosCompletamenteRealizada()) {
+                        System.out.println("Advertencia: La orden " + o.getNumOrden() + " no está completamente realizada.");
+                    }
+                })
                 .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
                 .collect(Collectors.toList());
+        return ordenes;
     }
-
-    public void cerrarOrden(Long numeroOrden,
+    public void cerrarOrden(OrdenDeInspeccion seleccionada,
                             String observacion,
                             List<MotivoFueraServicio> motivosSeleccionados) {
         // 1) Recupero el empleado logueado
@@ -63,40 +67,36 @@ public class GestorInspeccion {
         if (empleado == null) {
             throw new IllegalStateException("No hay Responsable de Inspección logueado en la sesión.");
         }
-        // 2) Busco la orden
-        OrdenDeInspeccion orden = repoOrdenes.buscarOrdenDeInspeccion(numeroOrden);
-        if (orden == null) {
-            throw new IllegalArgumentException("La orden no existe: " + numeroOrden);
-        }
+
         // 3) Validaciones
-        if (!orden.sosDeEmpleado(empleado)) {
-            throw new IllegalStateException("La orden no pertenece al empleado logueado.");
+        if (!seleccionada .sosDeEmpleado(empleado)) {
+            throw new IllegalStateException("La seleccionada  no pertenece al empleado logueado.");
         }
-        if (!orden.sosCompletamenteRealizada()) {
-            throw new IllegalStateException("La orden no está totalmente realizada y no puede ser cerrada.");
+        if (!seleccionada .sosCompletamenteRealizada()) {
+            throw new IllegalStateException("La seleccionada  no está totalmente realizada y no puede ser cerrada.");
         }
         if (observacion == null || observacion.isBlank()) {
             throw new IllegalArgumentException("Debe ingresar una observación para el cierre.");
         }
         // 4) Completar datos de cierre de la ORDEN
-        orden.setFechaHoraCierre(LocalDateTime.now());
-        orden.setObservacionCierre(observacion);
+        seleccionada .setFechaHoraCierre(LocalDateTime.now());
+        seleccionada .setObservacionCierre(observacion);
         // 5) Poner sismógrafo fuera de servicio
         if (motivosSeleccionados != null && !motivosSeleccionados.isEmpty()) {
             Estado estadoFueraDeServicio = repoEstados.buscarEstado("FUERA_DE_SERVICIO");
             if (estadoFueraDeServicio == null) {
                 throw new IllegalStateException("El estado 'FUERA_DE_SERVICIO' no se encontró en el repositorio de estados.");
             }
-            orden.ponerFueraDeServicio(motivosSeleccionados, empleado, estadoFueraDeServicio);
+            seleccionada .ponerFueraDeServicio(motivosSeleccionados, empleado, estadoFueraDeServicio);
         }
         // 6) Cambiar el estado de la ORDEN a CERRADA y registrar el cambio en la ORDEN
         Estado estadoCerrada = repoEstados.buscarEstado("CERRADA");
         if (estadoCerrada == null) {
             throw new IllegalStateException("El estado 'CERRADA' no se encontró en el repositorio de estados.");
         }
-        Estado estadoAnteriorOrden = orden.getEstado();
+        Estado estadoAnteriorOrden = seleccionada .getEstado();
 
-        orden.setEstado(estadoCerrada);
+        seleccionada .setEstado(estadoCerrada);
 
         CambioEstado cambioOrden = new CambioEstado(
                 empleado,
@@ -106,20 +106,9 @@ public class GestorInspeccion {
                 null,
                 null
         );
-        orden.registrarCambioEstado(cambioOrden);
+        seleccionada .registrarCambioEstado(cambioOrden);
 
-        // 7) Guardar la orden actualizada
-        repoOrdenes.insertar(orden);
+        // 7) Guardar la seleccionada  actualizada
+        repoOrdenes.insertar(seleccionada );
 
-        //public void enviarCorreos(Empleado empleado){
-
-        //}
-    }
-
-   /* public Empleado obtenerEmpleadoLogueado() {
-        if (sesion == null) {
-            throw new IllegalStateException("No hay sesión activa.");
-        }
-        return sesion.obtenerEmpleadoLogueado();
-    }*/
-}
+    }}
