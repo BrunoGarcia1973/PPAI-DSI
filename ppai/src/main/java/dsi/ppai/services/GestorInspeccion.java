@@ -21,8 +21,8 @@ public class GestorInspeccion {
     private final RepositorioEstados repoEstados;
     private final Sesion sesion;
     private final RepositorioMotivoTipo repoMotivos;
-
-    //Buscar órdenes de inspección del RI que están COMPLETAMENTE realizadas.
+/*
+    //Buscar órdenes de inspección del RI logueado que están COMPLETAMENTE realizadas.
     public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
         Empleado empleado = sesion.obtenerEmpleadoLogueado();
         if (empleado == null) {
@@ -37,11 +37,11 @@ public class GestorInspeccion {
                 .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
                 .collect(Collectors.toList());
     }
-
+*/
     public List<MotivoTipo> buscarTiposMotivosFueraDeServicios() {
         return repoMotivos.buscarTiposMotivosFueraDeServicios();
     }
-
+    //Buscar órdenes de inspección del RI seleccionado que están COMPLETAMENTE realizadas
     public List<OrdenDeInspeccion> buscarOrdenesDeInspeccionDeRI(Empleado empleado) {
         if (empleado == null) {
             System.out.println("Advertencia: Se intentó buscar órdenes para un empleado nulo.");
@@ -50,14 +50,14 @@ public class GestorInspeccion {
         List<OrdenDeInspeccion> ordenes = repoOrdenes.findAll();
         ordenes = ordenes.stream()
                 .filter(o -> o.sosDeEmpleado(empleado))
-                .peek(o -> {
-                    if (!o.sosCompletamenteRealizada()) {
-                        System.out.println("Advertencia: La orden " + o.getNumOrden() + " no está completamente realizada.");
-                    }
-                })
-                .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
+                .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
                 .collect(Collectors.toList());
         return ordenes;
+    }
+    public List<OrdenDeInspeccion> ordenarPorFechaDeFinalizacion(List<OrdenDeInspeccion> ordenes){
+        return ordenes.stream()
+                .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
+                .collect(Collectors.toList());
     }
     public void cerrarOrden(OrdenDeInspeccion seleccionada,
                             String observacion,
@@ -87,7 +87,7 @@ public class GestorInspeccion {
             if (estadoFueraDeServicio == null) {
                 throw new IllegalStateException("El estado 'FUERA_DE_SERVICIO' no se encontró en el repositorio de estados.");
             }
-            seleccionada .ponerFueraDeServicio(motivosSeleccionados, empleado, estadoFueraDeServicio);
+            seleccionada.ponerFueraDeServicio(motivosSeleccionados, empleado);
         }
         // 6) Cambiar el estado de la ORDEN a CERRADA y registrar el cambio en la ORDEN
         Estado estadoCerrada = repoEstados.buscarEstado("CERRADA");

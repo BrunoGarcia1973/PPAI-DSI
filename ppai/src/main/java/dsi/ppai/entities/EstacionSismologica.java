@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -18,4 +19,7 @@ public class EstacionSismologica {
     private LocalDate fechaSolicitudCertificacion;
     private Sismografo sismografo; // Referencia al Sismografo asociado
 
+    public void ponerSismografoFueraServicio(List<MotivoFueraServicio> motivos, Empleado logueado){
+        this.sismografo.fueraDeServicio(motivos, logueado);
+    }
 }

@@ -2,7 +2,6 @@ package dsi.ppai.entities;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 @Data
 @NoArgsConstructor
@@ -16,16 +15,16 @@ public class Estado {
     public boolean esAbierta() {
         return "ABIERTA".equals(this.nombre);
     }
-    public boolean esCompletamenteRealizada() {
+    public boolean sosCompletamenteRealizada() {
         return "COMPLETAMENTE_REALIZADA".equals(this.nombre);
     }
-    public boolean esFueraDeServicio() {
+    public boolean sosFueraDeServicio() {
         return "FUERA_DE_SERVICIO".equals(this.nombre);
     }
     public boolean esEnMantenimiento() {
         return "EN_MANTENIMIENTO".equals(this.nombre);
     }
-    public boolean esCerrada() {
+    public boolean sosCerrada() {
         return "CERRADA".equals(this.nombre);
     }
 }

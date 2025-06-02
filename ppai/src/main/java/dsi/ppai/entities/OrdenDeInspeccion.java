@@ -38,7 +38,7 @@ public class OrdenDeInspeccion {
     }
 
     public boolean sosCompletamenteRealizada() {
-        return this.estado != null && "COMPLETAMENTE_REALIZADA".equals(this.estado.getNombre());
+        return this.estado.sosCompletamenteRealizada();
     }
 
     public boolean sosDeEmpleado(Empleado empleado) {
@@ -46,14 +46,14 @@ public class OrdenDeInspeccion {
                 this.empleado.getLegajo().equals(empleado.getLegajo());
     }
 
-    public void ponerFueraDeServicio(List<MotivoFueraServicio> motivos, Empleado empleadoLogueado, Estado estadoFueraDeServicio) {
+    public void ponerFueraDeServicio(List<MotivoFueraServicio> motivos, Empleado empleadoLogueado) {
         if (this.estacionSismologica == null || this.estacionSismologica.getSismografo() == null) {
             throw new IllegalStateException("La orden no tiene una estación o sismógrafo asociado para marcar fuera de servicio.");
         }
         if (motivos == null || motivos.isEmpty()) {
             throw new IllegalArgumentException("Se deben especificar motivos para poner el sismógrafo fuera de servicio.");
         }
-        this.estacionSismologica.getSismografo().marcarFueraDeServicio(motivos);
+        this.estacionSismologica.ponerSismografoFueraServicio(motivos, empleadoLogueado);
     }
 
     public void registrarCambioEstado(CambioEstado cambio) {

@@ -26,18 +26,10 @@ public class CambioEstado {
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
         this.motivosSeleccionados = (motivosSeleccionados != null) ? new ArrayList<>(motivosSeleccionados) : new ArrayList<>();
+
     }
 
-    /**
-     * Factory method para crear un cambio de estado "FUERA_DE_SERVICIO".
-     * Este método es llamado por Sismografo.marcarFueraDeServicio().
-     * Se asume que el Estado "FUERA_DE_SERVICIO" ya existe en el RepositorioEstados.
-     * @param empleado El empleado que realiza el cambio.
-     * @param estadoAnterior El estado en el que se encontraba el sismógrafo antes de este cambio.
-     * @param motivosFueraServicio Los motivos seleccionados para poner el sismógrafo fuera de servicio.
-     * @return Una nueva instancia de CambioEstado con el estado "FUERA_DE_SERVICIO".
-     */
-    public static CambioEstado createFueraDeServicio(
+    public static CambioEstado crearMotivoFueraServicio(
             Empleado empleado,
             Estado estadoAnterior,
             List<MotivoFueraServicio> motivosFueraServicio

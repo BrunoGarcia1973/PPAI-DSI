@@ -74,7 +74,7 @@ public class InterfazInspeccion {
         cmbEmpleados.setPromptText("Seleccione un Empleado"); // Texto por defecto
         // Listener para cuando se selecciona un empleado
         cmbEmpleados.valueProperty().addListener((obs, oldVal, newVal) -> {
-            cargarOrdenes(newVal); // Recargar la tabla con el empleado seleccionado
+            mostrarOrdCompRealizadas(newVal); // Recargar la tabla con el empleado seleccionado
         });
 
         filterBox.getChildren().addAll(lblSelectEmployee, cmbEmpleados);
@@ -98,7 +98,7 @@ public class InterfazInspeccion {
         primaryStage.setScene(scene);
         primaryStage.show();
         // Cargar órdenes inicialmente para el usuario logueado
-        cargarOrdenes(null);
+        mostrarOrdCompRealizadas(null);
     }
 
     private void simularLogin(String legajo) {
@@ -119,6 +119,8 @@ public class InterfazInspeccion {
     }
 
     private void setupTablaOrdenes() {
+        tablaOrdenes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY); // <-- Agrega esta línea aquí
+
         TableColumn<OrdenDeInspeccion, Long> colNumOrden = new TableColumn<>("Nº Orden");
         colNumOrden.setCellValueFactory(new PropertyValueFactory<>("numOrden"));
         colNumOrden.setPrefWidth(80);
@@ -153,11 +155,7 @@ public class InterfazInspeccion {
         });
         colFechaFin.setPrefWidth(150);
 
-        TableColumn<OrdenDeInspeccion, String> colObservacionCierre = new TableColumn<>("Obs. Cierre");
-        colObservacionCierre.setCellValueFactory(new PropertyValueFactory<>("observacionCierre"));
-        colObservacionCierre.setPrefWidth(370);
-
-        tablaOrdenes.getColumns().addAll(colNumOrden, colEstacion, colSismografoId, colEstado, colFechaFin, colObservacionCierre);
+        tablaOrdenes.getColumns().addAll(colNumOrden, colEstacion, colSismografoId, colEstado, colFechaFin);
     }
 
     // Método para cargar todos los empleados en el ComboBox
@@ -187,29 +185,23 @@ public class InterfazInspeccion {
         }
     }
     // Método de carga de órdenes
-    private void cargarOrdenes(Empleado empleadoSeleccionado) {
+    private void mostrarOrdCompRealizadas(Empleado empleadoSeleccionado) {
         try {
             List<OrdenDeInspeccion> ordenes;
-            if (empleadoSeleccionado == null) {
-                // Si no hay un empleado seleccionado en el ComboBox, se muestran las del RI logueado
-                ordenes = gestorInspeccion.buscarOrdenesInspeccionDeRI();
-                //showAlert(Alert.AlertType.INFORMATION, "Información", "Mostrando órdenes para el Responsable de Inspección logueado: " + sesion.obtenerEmpleadoLogueado().getNombre() + " " + sesion.obtenerEmpleadoLogueado().getApellido());
-            } else {
-                // Si hay un empleado seleccionado, se buscan sus órdenes usando el nuevo método
-                ordenes = gestorInspeccion.buscarOrdenesDeInspeccionDeRI(empleadoSeleccionado);
-                //showAlert(Alert.AlertType.INFORMATION, "Información", "Mostrando órdenes para: " + empleadoSeleccionado.getNombre() + " " + empleadoSeleccionado.getApellido());
-            }
+
+            ordenes = gestorInspeccion.ordenarPorFechaDeFinalizacion(gestorInspeccion.buscarOrdenesDeInspeccionDeRI(empleadoSeleccionado));
+
 
             observableOrdenes = FXCollections.observableArrayList(ordenes);
             tablaOrdenes.setItems(observableOrdenes);
-
+    /*
             if (ordenes.isEmpty()) {
                 if (empleadoSeleccionado == null) {
                     showAlert(Alert.AlertType.INFORMATION, "Información", "No se encontraron órdenes de inspección 'Completamente Realizadas' para el Responsable de Inspección logueado.");
                 } else {
                     showAlert(Alert.AlertType.INFORMATION, "Información", "No se encontraron órdenes de inspección 'Completamente Realizadas' para el empleado seleccionado: " + empleadoSeleccionado.getNombre() + " " + empleadoSeleccionado.getApellido());
                 }
-            }
+            }*/
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Error al Cargar Órdenes", "No se pudieron cargar las órdenes de inspección: " + e.getMessage());
             e.printStackTrace();
@@ -264,9 +256,9 @@ public class InterfazInspeccion {
         String observacion = resultObservacion.get().trim();
 
         List<MotivoTipo> motivosDisponibles = gestorInspeccion.buscarTiposMotivosFueraDeServicios();
-        List<MotivoFueraServicio> motivosParaSismografo = showMotivosDialog(motivosDisponibles);
+        List<MotivoFueraServicio> motivosParaSismografo = mostrarMotivosTiposFueraServicios(motivosDisponibles);
 
-        // Si el usuario cancela el diálogo de motivos
+        // Si el usuario cancela opcion de motivos
         if (motivosParaSismografo == null) {
             showAlert(Alert.AlertType.INFORMATION, "Información", "Operación de cierre de orden cancelada.");
             return;
@@ -291,7 +283,7 @@ public class InterfazInspeccion {
             try {
                 gestorInspeccion.cerrarOrden(ordenSeleccionada, observacion, motivosParaSismografo);
                 // Después de cerrar, recargar para el empleado que estaba seleccionado (o el logueado)
-                cargarOrdenes(cmbEmpleados.getSelectionModel().getSelectedItem());
+                mostrarOrdCompRealizadas(cmbEmpleados.getSelectionModel().getSelectedItem());
                 showAlert(Alert.AlertType.INFORMATION, "Éxito", "Orden de Inspección Nº " + ordenSeleccionada.getNumOrden() + " cerrada exitosamente.");
             } catch (Exception e) {
                 showAlert(Alert.AlertType.ERROR, "Error al Cerrar Orden", "Ocurrió un error al intentar cerrar la orden: " + e.getMessage());
@@ -302,7 +294,7 @@ public class InterfazInspeccion {
         }
     }
 
-    private List<MotivoFueraServicio> showMotivosDialog(List<MotivoTipo> motivosDisponibles) {
+    private List<MotivoFueraServicio> mostrarMotivosTiposFueraServicios(List<MotivoTipo> motivosDisponibles) {
         Stage dialogStage = new Stage();
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.setTitle("Motivos Fuera de Servicio");

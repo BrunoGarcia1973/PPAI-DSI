@@ -30,7 +30,7 @@ public class Sismografo {
         return cambiosDeEstados.stream().anyMatch(CambioEstado::esEstadoActual);
     }
 
-    public void marcarFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados) {
+    public void fueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados, Empleado logueado) {
         // 1) Obtener el cambio de estado actual
         CambioEstado cambioActual = cambiosDeEstados.stream()
                 .filter(CambioEstado::esEstadoActual)
@@ -40,11 +40,7 @@ public class Sismografo {
             cambioActual.setFechaHoraFin(LocalDateTime.now()); // Cierra el estado anterior
         }
         // 2) Crear el nuevo estado 'FueraDeServicio' y el CambioEstado usando el factory method
-        CambioEstado nuevoCambio = CambioEstado.createFueraDeServicio(
-                cambioActual != null ? cambioActual.getEmpleado() : null,
-                cambioActual != null ? cambioActual.getEstadoNuevo() : null,
-                motivosSeleccionados
-        );
+        CambioEstado nuevoCambio = new CambioEstado(logueado, cambioActual.getEstadoAnterior(), cambioActual.getEstadoNuevo(), LocalDateTime.now(), null, motivosSeleccionados);
 
         // 3) Registrar el nuevo cambio de estado
         cambiosDeEstados.add(nuevoCambio);
