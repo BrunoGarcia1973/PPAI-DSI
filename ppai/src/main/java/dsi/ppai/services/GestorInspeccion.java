@@ -41,7 +41,7 @@ public class GestorInspeccion {
     public List<MotivoTipo> buscarTiposMotivosFueraDeServicios() {
         return repoMotivos.buscarTiposMotivosFueraDeServicios();
     }
-
+    //Buscar órdenes de inspección del RI seleccionado
     public List<OrdenDeInspeccion> buscarOrdenesDeInspeccionDeRI(Empleado empleado) {
         if (empleado == null) {
             System.out.println("Advertencia: Se intentó buscar órdenes para un empleado nulo.");

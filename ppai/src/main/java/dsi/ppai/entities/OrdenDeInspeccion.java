@@ -62,4 +62,8 @@ public class OrdenDeInspeccion {
         }
         this.cambios.add(cambio);
     }
+
+    public List<OrdenDeInspeccion> obtenerDatosDeOI(){
+
+    }
 }

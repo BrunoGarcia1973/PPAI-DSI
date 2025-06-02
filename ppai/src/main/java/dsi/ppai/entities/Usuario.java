@@ -7,9 +7,6 @@ public class Usuario {
     private String nombreUsuario;
     private Empleado empleado;
 
-    public Empleado obtenerEmpleado() {
-        return empleado;
-    }
 
     public void setEmpleado(Empleado empleado) {
         this.empleado = empleado;
@@ -31,7 +28,7 @@ public class Usuario {
     public Usuario() {
     }
 
-    public Empleado getEmpleado() {
+    public Empleado obtenerEmpleado() {
         return this.empleado;
     }
 }

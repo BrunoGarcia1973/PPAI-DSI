@@ -74,7 +74,7 @@ public class InterfazInspeccion {
         cmbEmpleados.setPromptText("Seleccione un Empleado"); // Texto por defecto
         // Listener para cuando se selecciona un empleado
         cmbEmpleados.valueProperty().addListener((obs, oldVal, newVal) -> {
-            cargarOrdenes(newVal); // Recargar la tabla con el empleado seleccionado
+            mostrarOrdCompRealizadas(newVal); // Recargar la tabla con el empleado seleccionado
         });
 
         filterBox.getChildren().addAll(lblSelectEmployee, cmbEmpleados);
@@ -98,14 +98,14 @@ public class InterfazInspeccion {
         primaryStage.setScene(scene);
         primaryStage.show();
         // Cargar órdenes inicialmente para el usuario logueado
-        cargarOrdenes(null);
+        mostrarOrdCompRealizadas(null);
     }
 
     private void simularLogin(String legajo) {
         System.out.println("--- SIMULANDO LOGIN ---");
         try {
             Usuario usuario = new Usuario("usuario" + legajo, repoEmpleados.buscarEmpleadoPorLegajo(legajo));
-            if (usuario.getEmpleado() == null) {
+            if (usuario.obtenerEmpleado() == null) {
                 showAlert(Alert.AlertType.ERROR, "Error de Login", "No se encontró el empleado con legajo: " + legajo);
                 Platform.exit();
             }
@@ -119,6 +119,8 @@ public class InterfazInspeccion {
     }
 
     private void setupTablaOrdenes() {
+        tablaOrdenes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+
         TableColumn<OrdenDeInspeccion, Long> colNumOrden = new TableColumn<>("Nº Orden");
         colNumOrden.setCellValueFactory(new PropertyValueFactory<>("numOrden"));
         colNumOrden.setPrefWidth(80);
@@ -153,13 +155,8 @@ public class InterfazInspeccion {
         });
         colFechaFin.setPrefWidth(150);
 
-        TableColumn<OrdenDeInspeccion, String> colObservacionCierre = new TableColumn<>("Obs. Cierre");
-        colObservacionCierre.setCellValueFactory(new PropertyValueFactory<>("observacionCierre"));
-        colObservacionCierre.setPrefWidth(370);
-
-        tablaOrdenes.getColumns().addAll(colNumOrden, colEstacion, colSismografoId, colEstado, colFechaFin, colObservacionCierre);
+        tablaOrdenes.getColumns().addAll(colNumOrden, colEstacion, colSismografoId, colEstado, colFechaFin);
     }
-
     // Método para cargar todos los empleados en el ComboBox
     private void cargarEmpleadosEnComboBox() {
         try {
@@ -187,7 +184,7 @@ public class InterfazInspeccion {
         }
     }
     // Método de carga de órdenes
-    private void cargarOrdenes(Empleado empleadoSeleccionado) {
+    private void mostrarOrdCompRealizadas(Empleado empleadoSeleccionado) {
         try {
             List<OrdenDeInspeccion> ordenes;
             if (empleadoSeleccionado == null) {
@@ -264,7 +261,7 @@ public class InterfazInspeccion {
         String observacion = resultObservacion.get().trim();
 
         List<MotivoTipo> motivosDisponibles = gestorInspeccion.buscarTiposMotivosFueraDeServicios();
-        List<MotivoFueraServicio> motivosParaSismografo = showMotivosDialog(motivosDisponibles);
+        List<MotivoFueraServicio> motivosParaSismografo = mostrarMotivosTiposFueraServicios(motivosDisponibles);
 
         // Si el usuario cancela el diálogo de motivos
         if (motivosParaSismografo == null) {
@@ -291,7 +288,7 @@ public class InterfazInspeccion {
             try {
                 gestorInspeccion.cerrarOrden(ordenSeleccionada.getNumOrden(), observacion, motivosParaSismografo);
                 // Después de cerrar, recargar para el empleado que estaba seleccionado (o el logueado)
-                cargarOrdenes(cmbEmpleados.getSelectionModel().getSelectedItem());
+                mostrarOrdCompRealizadas(cmbEmpleados.getSelectionModel().getSelectedItem());
                 showAlert(Alert.AlertType.INFORMATION, "Éxito", "Orden de Inspección Nº " + ordenSeleccionada.getNumOrden() + " cerrada exitosamente.");
             } catch (Exception e) {
                 showAlert(Alert.AlertType.ERROR, "Error al Cerrar Orden", "Ocurrió un error al intentar cerrar la orden: " + e.getMessage());
@@ -302,7 +299,7 @@ public class InterfazInspeccion {
         }
     }
 
-    private List<MotivoFueraServicio> showMotivosDialog(List<MotivoTipo> motivosDisponibles) {
+    private List<MotivoFueraServicio> mostrarMotivosTiposFueraServicios(List<MotivoTipo> motivosDisponibles) {
         Stage dialogStage = new Stage();
         dialogStage.initModality(Modality.APPLICATION_MODAL);
         dialogStage.setTitle("Motivos Fuera de Servicio");

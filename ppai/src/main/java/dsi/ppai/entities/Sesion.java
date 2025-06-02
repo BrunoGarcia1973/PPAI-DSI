@@ -25,6 +25,6 @@ public class Sesion {
         if (usuarioLogueado == null) {
             throw new IllegalStateException("No hay un usuario logueado.");
         }
-        return usuarioLogueado.getEmpleado();
+        return usuarioLogueado.obtenerEmpleado();
     }
 }
