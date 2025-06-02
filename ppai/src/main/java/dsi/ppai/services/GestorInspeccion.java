@@ -69,34 +69,30 @@ public class GestorInspeccion {
         }
 
         // 3) Validaciones
-        if (!seleccionada .sosDeEmpleado(empleado)) {
+        if (!seleccionada.sosDeEmpleado(empleado)) {
             throw new IllegalStateException("La seleccionada  no pertenece al empleado logueado.");
         }
-        if (!seleccionada .sosCompletamenteRealizada()) {
+        if (!seleccionada.sosCompletamenteRealizada()) {
             throw new IllegalStateException("La seleccionada  no está totalmente realizada y no puede ser cerrada.");
         }
         if (observacion == null || observacion.isBlank()) {
             throw new IllegalArgumentException("Debe ingresar una observación para el cierre.");
         }
         // 4) Completar datos de cierre de la ORDEN
-        seleccionada .setFechaHoraCierre(LocalDateTime.now());
-        seleccionada .setObservacionCierre(observacion);
-        // 5) Poner sismógrafo fuera de servicio
-        if (motivosSeleccionados != null && !motivosSeleccionados.isEmpty()) {
-            Estado estadoFueraDeServicio = repoEstados.buscarEstado("FUERA_DE_SERVICIO");
-            if (estadoFueraDeServicio == null) {
-                throw new IllegalStateException("El estado 'FUERA_DE_SERVICIO' no se encontró en el repositorio de estados.");
-            }
-            seleccionada.ponerFueraDeServicio(motivosSeleccionados, empleado);
-        }
+        seleccionada.setFechaHoraCierre(LocalDateTime.now());
+        seleccionada.setObservacionCierre(observacion);
+
         // 6) Cambiar el estado de la ORDEN a CERRADA y registrar el cambio en la ORDEN
-        Estado estadoCerrada = repoEstados.buscarEstado("CERRADA");
+
+        Estado estadoCerrada = repoEstados.sosCerrado("CERRADA");
+
         if (estadoCerrada == null) {
             throw new IllegalStateException("El estado 'CERRADA' no se encontró en el repositorio de estados.");
         }
-        Estado estadoAnteriorOrden = seleccionada .getEstado();
 
-        seleccionada .setEstado(estadoCerrada);
+        Estado estadoAnteriorOrden = seleccionada.getEstado();
+
+        seleccionada.setEstado(estadoCerrada);
 
         CambioEstado cambioOrden = new CambioEstado(
                 empleado,
@@ -106,9 +102,20 @@ public class GestorInspeccion {
                 null,
                 null
         );
-        seleccionada .registrarCambioEstado(cambioOrden);
+        seleccionada.registrarCambioEstado(cambioOrden);
 
-        // 7) Guardar la seleccionada  actualizada
+        // 6) Guardar la seleccionada  actualizada
         repoOrdenes.insertar(seleccionada );
+        // 7) Poner sismógrafo fuera de servicio
+        if (motivosSeleccionados != null && !motivosSeleccionados.isEmpty()) {
+            Estado estadoFueraDeServicio = repoEstados.sosFueraDeServicio("FUERA_DE_SERVICIO");
+            if (estadoFueraDeServicio == null) {
+                throw new IllegalStateException("El estado 'FUERA_DE_SERVICIO' no se encontró en el repositorio de estados.");
+            }
+
+            seleccionada.ponerFueraDeServicio(motivosSeleccionados, empleado, estadoFueraDeServicio);
+        }
+
+
 
     }}

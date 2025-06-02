@@ -19,7 +19,7 @@ public class EstacionSismologica {
     private LocalDate fechaSolicitudCertificacion;
     private Sismografo sismografo; // Referencia al Sismografo asociado
 
-    public void ponerSismografoFueraServicio(List<MotivoFueraServicio> motivos, Empleado logueado){
-        this.sismografo.fueraDeServicio(motivos, logueado);
+    public void ponerSismografoFueraServicio(List<MotivoFueraServicio> motivos, Empleado logueado, Estado estadoFueraDeServicio) {
+        this.sismografo.fueraDeServicio(motivos, logueado, estadoFueraDeServicio);
     }
 }

@@ -6,15 +6,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class Estado {
+    private String ambito;
     private String nombre;
 
-    public Estado(String nombre) {
+    public Estado(String ambito, String nombre) {
         this.nombre = nombre;
     }
 
-    public boolean esAbierta() {
-        return "ABIERTA".equals(this.nombre);
-    }
     public boolean sosCompletamenteRealizada() {
         return "COMPLETAMENTE_REALIZADA".equals(this.nombre);
     }
@@ -27,4 +25,9 @@ public class Estado {
     public boolean sosCerrada() {
         return "CERRADA".equals(this.nombre);
     }
+    public boolean sosAmbitoOI(){
+        return "OI".equals(this.ambito);
+    }
+
+
 }

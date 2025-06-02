@@ -26,11 +26,7 @@ public class Sismografo {
         this.cambiosDeEstados = new ArrayList<>(); // Asegura que la lista se inicialice
     }
 
-    public boolean tieneEstadoActual() {
-        return cambiosDeEstados.stream().anyMatch(CambioEstado::esEstadoActual);
-    }
-
-    public void fueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados, Empleado logueado) {
+    public void fueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados, Empleado logueado, Estado estadoFueraDeServicio) {
         // 1) Obtener el cambio de estado actual
         CambioEstado cambioActual = cambiosDeEstados.stream()
                 .filter(CambioEstado::esEstadoActual)
@@ -40,18 +36,12 @@ public class Sismografo {
             cambioActual.setFechaHoraFin(LocalDateTime.now()); // Cierra el estado anterior
         }
         // 2) Crear el nuevo estado 'FueraDeServicio' y el CambioEstado usando el factory method
-        CambioEstado nuevoCambio = new CambioEstado(logueado, cambioActual.getEstadoAnterior(), cambioActual.getEstadoNuevo(), LocalDateTime.now(), null, motivosSeleccionados);
+        CambioEstado nuevoCambio = new CambioEstado(logueado, estadoFueraDeServicio, cambioActual.getEstadoNuevo(), LocalDateTime.now(), null, motivosSeleccionados);
 
         // 3) Registrar el nuevo cambio de estado
         cambiosDeEstados.add(nuevoCambio);
-    }
 
-    public Estado getEstadoActual() {
-        return cambiosDeEstados.stream()
-                .filter(ce -> ce.getFechaHoraFin() == null) // Busca el cambio de estado que no tiene fecha de fin
-                .findFirst()
-                .map(CambioEstado::getEstadoNuevo)
-                .orElse(null); // Retorna null si no hay un estado activo
+       MotivoFueraServicio nuevoMotivo = nuevoCambio.crearMotivoFueraServicio(motivosSeleccionados);
     }
 
     public void agregarCambioEstado(CambioEstado cambio) {

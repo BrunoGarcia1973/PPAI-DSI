@@ -18,6 +18,9 @@ public class MotivoTipo {
         this.descripcion = descripcion;
         this.motivos = new ArrayList<>();
     }
+    public MotivoTipo(List<MotivoFueraServicio> motivos) {
+        this.motivos = (motivos != null) ? new ArrayList<>(motivos) : new ArrayList<>();
+    }
 
     public void agregarMotivo(MotivoFueraServicio motivo) {
         if (this.motivos == null) {

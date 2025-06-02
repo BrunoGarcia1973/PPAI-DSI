@@ -29,27 +29,14 @@ public class CambioEstado {
 
     }
 
-    public static CambioEstado crearMotivoFueraServicio(
-            Empleado empleado,
-            Estado estadoAnterior,
-            List<MotivoFueraServicio> motivosFueraServicio
-    ) {
-        Estado estadoFueraDeServicio = new Estado("FUERA_DE_SERVICIO");
-        return new CambioEstado(
-                empleado,
-                estadoAnterior,
-                estadoFueraDeServicio,
-                LocalDateTime.now(),
-                null,
-                motivosFueraServicio
-        );
-    }
 
     public boolean esEstadoActual() {
         return this.fechaHoraFin == null;
     }
 
-    public void cerrarCambio() {
-        this.fechaHoraFin = LocalDateTime.now();
+    public MotivoFueraServicio crearMotivoFueraServicio(List<MotivoFueraServicio> motivos) {
+        return new MotivoFueraServicio(motivos.toString());
     }
+
+
 }
