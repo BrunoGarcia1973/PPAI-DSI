@@ -27,7 +27,7 @@ public class RepositorioEmpleados {
         empleados.put("2002", new Empleado("2002", "Laura", "Gómez", "laura.gomez@example.com", "3513334444", responsableDeInspeccion));
         empleados.put("3003", new Empleado("3003", "Carlos", "Rodríguez", "carlos.r@example.com", "3515556666", responsableDeInspeccion));
         empleados.put("4004", new Empleado("4004", "Ana", "Díaz", "ana.d@example.com", "3517778888", tecnico));
-        empleados.put("SYS", new Empleado("SYS", "Sistema", "Automatizado", "sistema@example.com", "0000000000", sysUser));
+        empleados.put("5005", new Empleado("5005", "Jhony", "Montenegro", "jhon@example.com", "0000000000", sysUser));
     }
 
     public Empleado buscarEmpleadoPorLegajo(String legajo) {

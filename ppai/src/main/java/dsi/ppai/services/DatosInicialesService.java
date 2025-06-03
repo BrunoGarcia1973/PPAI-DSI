@@ -62,7 +62,7 @@ public class DatosInicialesService {
         Empleado empleadoRI_Juan = repoEmpleados.buscarEmpleadoPorLegajo("1001");
         Empleado empleadoRI_Laura = repoEmpleados.buscarEmpleadoPorLegajo("2002");
         Empleado empleadoRI_Carlos = repoEmpleados.buscarEmpleadoPorLegajo("3003");
-        Empleado empleadoSistema = repoEmpleados.buscarEmpleadoPorLegajo("SYS");
+        Empleado empleadoSistema = repoEmpleados.buscarEmpleadoPorLegajo("5005");
 
         if (empleadoRI_Juan == null || empleadoRI_Laura == null || empleadoRI_Carlos == null || empleadoSistema == null) {
             System.err.println("ERROR: No se encontraron todos los empleados esperados en RepositorioEmpleados. Verifique la precarga en RepositorioEmpleados.");
