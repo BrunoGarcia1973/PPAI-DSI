@@ -7,7 +7,7 @@ import dsi.ppai.entities.Sesion;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-@Component
+//@Component
 public class InspeccionRunner implements CommandLineRunner {
 
     private final GestorInspeccion gestorInspeccion;

@@ -21,23 +21,7 @@ public class GestorInspeccion {
     private final RepositorioEstados repoEstados;
     private final Sesion sesion;
     private final RepositorioMotivoTipo repoMotivos;
-/*
-    //Buscar órdenes de inspección del RI logueado que están COMPLETAMENTE realizadas.
-    public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
-        Empleado empleado = sesion.obtenerEmpleadoLogueado();
-        if (empleado == null) {
-            System.out.println("Advertencia: No hay empleado logueado en la sesión para buscar órdenes de inspección.");
-            return List.of();
-        }
 
-        return repoOrdenes
-                .buscarOrdenesInspeccionDeRI(empleado.getLegajo())
-                .stream()
-                .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
-                .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
-                .collect(Collectors.toList());
-    }
-*/
     public List<MotivoTipo> buscarTiposMotivosFueraDeServicios() {
         return repoMotivos.buscarTiposMotivosFueraDeServicios();
     }
@@ -83,7 +67,6 @@ public class GestorInspeccion {
         seleccionada.setObservacionCierre(observacion);
 
         // 6) Cambiar el estado de la ORDEN a CERRADA y registrar el cambio en la ORDEN
-
         Estado estadoCerrada = repoEstados.sosCerrado("CERRADA");
 
         if (estadoCerrada == null) {
@@ -103,7 +86,6 @@ public class GestorInspeccion {
                 null
         );
         seleccionada.registrarCambioEstado(cambioOrden);
-
         // 6) Guardar la seleccionada  actualizada
         repoOrdenes.insertar(seleccionada );
         // 7) Poner sismógrafo fuera de servicio
@@ -115,7 +97,9 @@ public class GestorInspeccion {
 
             seleccionada.ponerFueraDeServicio(motivosSeleccionados, empleado, estadoFueraDeServicio);
         }
-
-
-
-    }}
+        //buscarResponsableReparacion(){}
+        //enviarCorreos(){}
+    }
+    //public Empleado buscarResponsableReparacion(){}
+    //public void enviarCorreos(){}
+}

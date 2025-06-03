@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
-import java.util.stream.Collectors; // Asegúrate de importar esto
+import java.util.stream.Collectors;
 
 @Component
 public class InterfazInspeccion {
@@ -38,7 +38,7 @@ public class InterfazInspeccion {
     private ObservableList<OrdenDeInspeccion> observableOrdenes;
     private TableView<OrdenDeInspeccion> tablaOrdenes;
     private Label labelUsuarioLogueado;
-    private ComboBox<Empleado> cmbEmpleados; // Nuevo ComboBox para seleccionar empleados
+    private ComboBox<Empleado> cmbEmpleados;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     @Autowired
@@ -49,9 +49,47 @@ public class InterfazInspeccion {
     }
 
     public void start(Stage primaryStage) {
-        simularLogin("1001"); // Logueamos a Juan Pérez (legajo 1001)
+        simularLogin("1001");
 
-        primaryStage.setTitle("Sistema de Cierre de Órdenes de Inspección");
+        // Menu Principal
+        primaryStage.setTitle("Menú Principal - Sistema de Inspección");
+
+        VBox mainMenuLayout = new VBox(20);
+        mainMenuLayout.setAlignment(Pos.CENTER);
+        mainMenuLayout.setPadding(new Insets(50));
+
+        Label welcomeLabel = new Label("SalesForce Red Sísmica");
+        welcomeLabel.setStyle("-fx-font-size: 18px; -fx-font-weight: bold;");
+
+        Button btnCerrarOrdenMenu = new Button("Cerrar Orden de Inspección");
+        btnCerrarOrdenMenu.setPrefSize(250, 40);
+        btnCerrarOrdenMenu.setStyle("-fx-font-size: 14px;");
+
+        Button btnExitMenu = new Button("Salir del Sistema");
+        btnExitMenu.setPrefSize(250, 40);
+        btnExitMenu.setStyle("-fx-font-size: 14px;");
+
+        mainMenuLayout.getChildren().addAll(welcomeLabel, btnCerrarOrdenMenu, btnExitMenu);
+
+        Scene mainMenuScene = new Scene(mainMenuLayout, 400, 300);
+        primaryStage.setScene(mainMenuScene);
+        primaryStage.show();
+
+        // botón Cerrar Orden de Inspección"
+        btnCerrarOrdenMenu.setOnAction(e -> {
+            primaryStage.hide();
+            mostrarInterfazInspeccion(primaryStage);
+        });
+
+        // botón Salir del menú
+        btnExitMenu.setOnAction(e -> Platform.exit());
+    }
+
+    // mostrar la interfaz de inspección
+    private void mostrarInterfazInspeccion(Stage primaryStage) {
+        Stage inspeccionStage = new Stage();
+        inspeccionStage.setTitle("Sistema de Cierre de Órdenes de Inspección");
+        inspeccionStage.initModality(Modality.APPLICATION_MODAL);
 
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
@@ -64,41 +102,55 @@ public class InterfazInspeccion {
         topBox.setPadding(new Insets(5));
         topBox.setAlignment(Pos.CENTER_LEFT);
 
-        // --- Filter Section: Employee Selection ---
         HBox filterBox = new HBox(10);
         filterBox.setAlignment(Pos.CENTER_LEFT);
         filterBox.setPadding(new Insets(0, 0, 10, 0));
         Label lblSelectEmployee = new Label("Ver órdenes de:");
         cmbEmpleados = new ComboBox<>();
-        cargarEmpleadosEnComboBox(); // Cargar la lista de empleados
-        cmbEmpleados.setPromptText("Seleccione un Empleado"); // Texto por defecto
-        // Listener para cuando se selecciona un empleado
+        cargarEmpleadosEnComboBox();
+        cmbEmpleados.setPromptText("Seleccione un Empleado");
         cmbEmpleados.valueProperty().addListener((obs, oldVal, newVal) -> {
-            mostrarOrdCompRealizadas(newVal); // Recargar la tabla con el empleado seleccionado
+            mostrarOrdCompRealizadas(newVal);
         });
 
         filterBox.getChildren().addAll(lblSelectEmployee, cmbEmpleados);
 
-        VBox topCombinedBox = new VBox(5, topBox, filterBox); // Combinar info de usuario y filtro
+        VBox topCombinedBox = new VBox(5, topBox, filterBox);
         root.setTop(topCombinedBox);
-        // --- Center Section: Orders Table ---
         tablaOrdenes = new TableView<>();
         setupTablaOrdenes();
         root.setCenter(tablaOrdenes);
-        // --- Bottom Section: Buttons ---
+
         Button btnCerrarOrden = new Button("Cerrar Orden Seleccionada");
         btnCerrarOrden.setOnAction(e -> iniciarCierreOrdenInspeccion());
         Button btnSalir = new Button("Salir");
-        btnSalir.setOnAction(e -> Platform.exit());
+        btnSalir.setOnAction(e -> {
+            inspeccionStage.close();
+            primaryStage.show();
+        });
         HBox bottomBox = new HBox(10, btnCerrarOrden, btnSalir);
         bottomBox.setPadding(new Insets(10, 0, 0, 0));
         bottomBox.setAlignment(Pos.CENTER_RIGHT);
         root.setBottom(bottomBox);
         Scene scene = new Scene(root, 900, 600);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-        // Cargar órdenes inicialmente para el usuario logueado
+        inspeccionStage.setScene(scene);
+        inspeccionStage.show();
         mostrarOrdCompRealizadas(null);
+    }
+
+    private <T, S> TableCell<T, S> createCenteredCell() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(S item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item.toString());
+                }
+                setAlignment(Pos.CENTER);
+            }
+        };
     }
 
     private void simularLogin(String legajo) {
@@ -119,11 +171,13 @@ public class InterfazInspeccion {
     }
 
     private void setupTablaOrdenes() {
-        tablaOrdenes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY); // <-- Agrega esta línea aquí
+        tablaOrdenes.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
         TableColumn<OrdenDeInspeccion, Long> colNumOrden = new TableColumn<>("Nº Orden");
         colNumOrden.setCellValueFactory(new PropertyValueFactory<>("numOrden"));
         colNumOrden.setPrefWidth(80);
+        colNumOrden.setCellFactory(tc -> createCenteredCell());
+
 
         TableColumn<OrdenDeInspeccion, String> colEstacion = new TableColumn<>("Estación Sismológica");
         colEstacion.setCellValueFactory(cellData -> {
@@ -131,6 +185,8 @@ public class InterfazInspeccion {
             return new javafx.beans.property.SimpleStringProperty(orden.getEstacionSismologica().getNombre());
         });
         colEstacion.setPrefWidth(150);
+        colEstacion.setCellFactory(tc -> createCenteredCell());
+
 
         TableColumn<OrdenDeInspeccion, Integer> colSismografoId = new TableColumn<>("Sismógrafo ID");
         colSismografoId.setCellValueFactory(cellData -> {
@@ -138,6 +194,8 @@ public class InterfazInspeccion {
             return new javafx.beans.property.SimpleObjectProperty<>(orden.getEstacionSismologica().getSismografo().getIdentificadorSismografo());
         });
         colSismografoId.setPrefWidth(120);
+        colSismografoId.setCellFactory(tc -> createCenteredCell());
+
 
         TableColumn<OrdenDeInspeccion, String> colEstado = new TableColumn<>("Estado Actual");
         colEstado.setCellValueFactory(cellData -> {
@@ -145,6 +203,8 @@ public class InterfazInspeccion {
             return new javafx.beans.property.SimpleStringProperty(orden.getEstado().getNombre());
         });
         colEstado.setPrefWidth(120);
+        colEstado.setCellFactory(tc -> createCenteredCell());
+
 
         TableColumn<OrdenDeInspeccion, String> colFechaFin = new TableColumn<>("Fecha Finalización");
         colFechaFin.setCellValueFactory(cellData -> {
@@ -154,11 +214,12 @@ public class InterfazInspeccion {
             );
         });
         colFechaFin.setPrefWidth(150);
+        colFechaFin.setCellFactory(tc -> createCenteredCell());
+
 
         tablaOrdenes.getColumns().addAll(colNumOrden, colEstacion, colSismografoId, colEstado, colFechaFin);
     }
 
-    // Método para cargar todos los empleados en el ComboBox
     private void cargarEmpleadosEnComboBox() {
         try {
             List<Empleado> todosLosEmpleados = repoEmpleados.findAll();
@@ -184,24 +245,13 @@ public class InterfazInspeccion {
             e.printStackTrace();
         }
     }
-    // Método de carga de órdenes
+
     private void mostrarOrdCompRealizadas(Empleado empleadoSeleccionado) {
         try {
             List<OrdenDeInspeccion> ordenes;
-
             ordenes = gestorInspeccion.ordenarPorFechaDeFinalizacion(gestorInspeccion.buscarOrdenesDeInspeccionDeRI(empleadoSeleccionado));
-
-
             observableOrdenes = FXCollections.observableArrayList(ordenes);
             tablaOrdenes.setItems(observableOrdenes);
-    /*
-            if (ordenes.isEmpty()) {
-                if (empleadoSeleccionado == null) {
-                    showAlert(Alert.AlertType.INFORMATION, "Información", "No se encontraron órdenes de inspección 'Completamente Realizadas' para el Responsable de Inspección logueado.");
-                } else {
-                    showAlert(Alert.AlertType.INFORMATION, "Información", "No se encontraron órdenes de inspección 'Completamente Realizadas' para el empleado seleccionado: " + empleadoSeleccionado.getNombre() + " " + empleadoSeleccionado.getApellido());
-                }
-            }*/
         } catch (Exception e) {
             showAlert(Alert.AlertType.ERROR, "Error al Cargar Órdenes", "No se pudieron cargar las órdenes de inspección: " + e.getMessage());
             e.printStackTrace();
@@ -214,7 +264,6 @@ public class InterfazInspeccion {
             showAlert(Alert.AlertType.WARNING, "Advertencia", "Por favor, seleccione una orden de inspección de la tabla.");
             return;
         }
-        // Solo se pueden cerrar órdenes que estén 'Completamente Realizadas'
         if (!ordenSeleccionada.sosCompletamenteRealizada()) {
             showAlert(Alert.AlertType.ERROR, "Error de Estado", "La orden seleccionada no está 'Completamente Realizada' y no puede ser cerrada.");
             return;
@@ -258,7 +307,6 @@ public class InterfazInspeccion {
         List<MotivoTipo> motivosDisponibles = gestorInspeccion.buscarTiposMotivosFueraDeServicios();
         List<MotivoFueraServicio> motivosParaSismografo = mostrarMotivosTiposFueraServicios(motivosDisponibles);
 
-        // Si el usuario cancela opcion de motivos
         if (motivosParaSismografo == null) {
             showAlert(Alert.AlertType.INFORMATION, "Información", "Operación de cierre de orden cancelada.");
             return;
@@ -282,7 +330,6 @@ public class InterfazInspeccion {
         if (confirmResult.isPresent() && confirmResult.get() == ButtonType.OK) {
             try {
                 gestorInspeccion.cerrarOrden(ordenSeleccionada, observacion, motivosParaSismografo);
-                // Después de cerrar, recargar para el empleado que estaba seleccionado (o el logueado)
                 mostrarOrdCompRealizadas(cmbEmpleados.getSelectionModel().getSelectedItem());
                 showAlert(Alert.AlertType.INFORMATION, "Éxito", "Orden de Inspección Nº " + ordenSeleccionada.getNumOrden() + " cerrada exitosamente.");
             } catch (Exception e) {
@@ -374,7 +421,7 @@ public class InterfazInspeccion {
         dialogStage.setScene(dialogScene);
         dialogStage.showAndWait();
 
-        return resultMotivos.get(); // Retorna la lista de motivos o null si se canceló
+        return resultMotivos.get();
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {
