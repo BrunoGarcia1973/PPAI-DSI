@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,20 +27,36 @@ public class GestorInspeccion {
     private final RepositorioMotivoTipo repoMotivos;
 
     //Buscar órdenes de inspección del RI que están COMPLETAMENTE realizadas.
+    // Clase: GestorInspeccion (asumiendo)
+
     @Transactional(readOnly = true)
     public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
         Empleado empleado = sesion.obtenerEmpleadoLogueado();
+
         if (empleado == null) {
             System.out.println("Advertencia: No hay empleado logueado en la sesión para buscar órdenes de inspección.");
             return List.of();
         }
 
-        return repoOrdenes
-                .buscarOrdenesInspeccionDeRI(empleado.getLegajo())
-                .stream()
-                .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
-                .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
-                .collect(Collectors.toList());
+        // 1. Obtener la lista de órdenes del repositorio (sin filtrar ni ordenar)
+        List<OrdenDeInspeccion> ordenesIniciales = repoOrdenes
+                .buscarOrdenesInspeccionDeRI(empleado.getLegajo());
+
+        // 2. Usar un ciclo for para filtrar las órdenes (reemplazando .stream().filter())
+        List<OrdenDeInspeccion> ordenesFiltradas = new ArrayList<>();
+
+        for (OrdenDeInspeccion orden : ordenesIniciales) {
+            // Aplica la condición de filtrado
+            if (orden.sosCompletamenteRealizada()) {
+                ordenesFiltradas.add(orden);
+            }
+        }
+
+        // 3. Ordenar la lista filtrada (reemplazando .sorted().collect())
+        // Nota: Collections.sort() ordena la lista 'in place' (modifica la lista original).
+        Collections.sort(ordenesFiltradas, Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion));
+
+        return ordenesFiltradas;
     }
 
     public List<MotivoTipo> buscarTiposMotivosFueraDeServicios() {
