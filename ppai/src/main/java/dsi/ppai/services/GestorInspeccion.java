@@ -4,16 +4,14 @@ import dsi.ppai.entities.*;
 import dsi.ppai.repositories.RepositorioEstados;
 import dsi.ppai.repositories.RepositorioMotivoTipo;
 import dsi.ppai.repositories.RepositorioOrdenes;
+import dsi.ppai.repositories.RepositorioUsuarios;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,10 +23,41 @@ public class GestorInspeccion {
     private final RepositorioEstados repoEstados;
     private final Sesion sesion;
     private final RepositorioMotivoTipo repoMotivos;
+    private final RepositorioUsuarios repoUsuarios;
 
-    //Buscar órdenes de inspección del RI que están COMPLETAMENTE realizadas.
-    // Clase: GestorInspeccion (asumiendo)
+    // --- MÉTODOS AUXILIARES DE BÚSQUEDA ---
 
+    /**
+     * Busca la Orden de Inspeccion por el número de orden (numOrden).
+     * Nota: Requiere que RepositorioOrdenes tenga una implementación que use findByNumOrden.
+     */
+    private Optional<OrdenDeInspeccion> buscarOrdenDeInspeccion(Long numeroOrden) {
+        // Asumo que el método default en RepositorioOrdenes mapea esto a findByNumOrden con Fetching
+        return Optional.ofNullable(repoOrdenes.buscarOrdenDeInspeccion(numeroOrden));
+    }
+
+    /**
+     * Busca el Usuario por nombre de usuario de forma transaccional (para Login).
+     */
+    @Transactional(readOnly = true)
+    public Optional<Usuario> buscarUsuarioPorNombre(String nombreUsuario) {
+        Optional<Usuario> usuarioOpt = repoUsuarios.findByNombreUsuario(nombreUsuario);
+        if (usuarioOpt.isPresent()) {
+            Usuario usuario = usuarioOpt.get();
+            Empleado empleado = usuario.getEmpleado();
+            if (empleado != null) {
+                empleado.getId(); // Fuerza la carga de Empleado (si fuera LAZY)
+            }
+        }
+        return usuarioOpt;
+    }
+
+
+    // --- LÓGICA DEL CASO DE USO: CARGA Y CIERRE DE ÓRDENES ---
+
+    /**
+     * Busca órdenes de inspección del RI logueado que están COMPLETAMENTE realizadas.
+     */
     @Transactional(readOnly = true)
     public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
         Empleado empleado = sesion.obtenerEmpleadoLogueado();
@@ -38,60 +67,54 @@ public class GestorInspeccion {
             return List.of();
         }
 
-        // 1. Obtener la lista de órdenes del repositorio (sin filtrar ni ordenar)
-        List<OrdenDeInspeccion> ordenesIniciales = repoOrdenes
-                .buscarOrdenesInspeccionDeRI(empleado.getLegajo());
+        final String NOMBRE_ESTADO_REQUERIDO = "COMPLETAMENTE_REALIZADA";
 
-        // 2. Usar un ciclo for para filtrar las órdenes (reemplazando .stream().filter())
-        List<OrdenDeInspeccion> ordenesFiltradas = new ArrayList<>();
+        Estado estadoRequerido = repoEstados.buscarEstado(NOMBRE_ESTADO_REQUERIDO);
 
-        for (OrdenDeInspeccion orden : ordenesIniciales) {
-            // Aplica la condición de filtrado
-            if (orden.sosCompletamenteRealizada()) {
-                ordenesFiltradas.add(orden);
-            }
+        if (estadoRequerido == null || estadoRequerido.getId() == null) {
+            System.err.println("ERROR: No se encontró la entidad Estado con ID válido para: " + NOMBRE_ESTADO_REQUERIDO);
+            return List.of();
         }
 
-        // 3. Ordenar la lista filtrada (reemplazando .sorted().collect())
-        // Nota: Collections.sort() ordena la lista 'in place' (modifica la lista original).
-        Collections.sort(ordenesFiltradas, Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion));
+        Long empleadoId = empleado.getId();
+        Long estadoId = estadoRequerido.getId();
+
+        // Consulta corregida: findByEmpleado_IdAndEstado_Id
+        List<OrdenDeInspeccion> ordenesFiltradas = repoOrdenes
+                .findByEmpleado_IdAndEstado_Id(empleadoId, estadoId);
+
+        Collections.sort(ordenesFiltradas, Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+
+        System.out.println("DEBUG: El gestor encontró " + ordenesFiltradas.size() + " órdenes 'CR' para el empleado ID: " + empleadoId);
 
         return ordenesFiltradas;
     }
 
-    public List<MotivoTipo> buscarTiposMotivosFueraDeServicios() {
-        return repoMotivos.buscarTiposMotivosFueraDeServicios();
-    }
-    //Buscar órdenes de inspección del RI seleccionado
-    @Transactional(readOnly = true)
-    public List<OrdenDeInspeccion> buscarOrdenesDeInspeccionDeRI(Empleado empleado) {
-        if (empleado == null) {
-            System.out.println("Advertencia: Se intentó buscar órdenes para un empleado nulo.");
-            return List.of();
-        }
-
-        return repoOrdenes.findAll().stream()
-                .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
-                .filter(orden -> orden.sosDeEmpleado(empleado))
-               // .sorted(Comparator.comparing(o -> o.getFechaHoraFinalizacion() != null ? o.getFechaHoraFinalizacion() : OffsetDateTime.MIN))
-                .collect(Collectors.toList());
-    }
-
+    /**
+     * [Paso 1 - 13] Ejecuta la lógica para cerrar una Orden de Inspección.
+     */
     @Transactional
     public void cerrarOrden(Long numeroOrden,
                             String observacion,
                             List<MotivoFueraServicio> motivosSeleccionados) {
-        // 1) Recupero el empleado logueado
+
+        // 1) Recuperar el empleado logueado
         Empleado empleado = sesion.obtenerEmpleadoLogueado();
         if (empleado == null) {
             throw new IllegalStateException("No hay Responsable de Inspección logueado en la sesión.");
         }
-        // 2) Busco la orden
-        OrdenDeInspeccion orden = repoOrdenes.buscarOrdenDeInspeccion(numeroOrden);
-        if (orden == null) {
+
+        // 2) Busco la orden (Usando el método auxiliar)
+        Optional<OrdenDeInspeccion> ordenOpt = buscarOrdenDeInspeccion(numeroOrden);
+
+        if (ordenOpt.isEmpty()) {
             throw new IllegalArgumentException("La orden no existe: " + numeroOrden);
         }
-        // 3) Validaciones
+
+        OrdenDeInspeccion orden = ordenOpt.get();
+
+        // 3) Validaciones (SosDeEmpleado, SosCompletamenteRealizada, Observación)
         if (!orden.sosDeEmpleado(empleado)) {
             throw new IllegalStateException("La orden no pertenece al empleado logueado.");
         }
@@ -101,23 +124,40 @@ public class GestorInspeccion {
         if (observacion == null || observacion.isBlank()) {
             throw new IllegalArgumentException("Debe ingresar una observación para el cierre.");
         }
+
         // 4) Completar datos de cierre de la ORDEN
-        orden.setFechaHoraCierre(OffsetDateTime.now().toLocalDateTime());
+        Estado estadoAnteriorOrden = orden.getEstado();
+
+        orden.setFechaHoraCierre(OffsetDateTime.now().toLocalDateTime()); // [Paso 11, Parcial]
         orden.setObservacionCierre(observacion);
-        // 5) Poner sismógrafo fuera de servicio
+
+        // 5) Poner sismógrafo fuera de servicio (NUEVA LÓGICA: Gestor -> Sismografo) [Paso 12]
         if (motivosSeleccionados != null && !motivosSeleccionados.isEmpty()) {
             Estado estadoFueraDeServicio = repoEstados.buscarEstado("FUERA_DE_SERVICIO");
             if (estadoFueraDeServicio == null) {
-                throw new IllegalStateException("El estado 'FUERA_DE_SERVICIO' no se encontró en el repositorio de estados.");
+                throw new IllegalStateException("El estado 'FUERA_DE_SERVICIO' no se encontró.");
             }
-            orden.ponerFueraDeServicio(motivosSeleccionados, empleado, estadoFueraDeServicio);
+
+            EstacionSismologica estacion = orden.getEstacionSismologica();
+            if (estacion == null) {
+                throw new IllegalStateException("La orden no tiene Estación Sismológica asociada.");
+            }
+
+            // Asumo que EstacionSismologica.getSismografo() devuelve el sismógrafo correcto
+            Sismografo sismografo = estacion.getSismografo();
+            if (sismografo == null) {
+                throw new IllegalStateException("La Estación Sismológica no tiene Sismógrafo asociado.");
+            }
+
+            // Llamada directa al Sismografo para marcar el FUERA DE SERVICIO
+            sismografo.marcarFueraDeServicio(motivosSeleccionados, empleado, estadoFueraDeServicio);
         }
-        // 6) Cambiar el estado de la ORDEN a CERRADA y registrar el cambio en la ORDEN
+
+        // 6) Cambiar el estado de la ORDEN a CERRADA y registrar el cambio [Paso 11]
         Estado estadoCerrada = repoEstados.buscarEstado("CERRADA");
         if (estadoCerrada == null) {
-            throw new IllegalStateException("El estado 'CERRADA' no se encontró en el repositorio de estados.");
+            throw new IllegalStateException("El estado 'CERRADA' no se encontró.");
         }
-        Estado estadoAnteriorOrden = orden.getEstado();
 
         orden.setEstado(estadoCerrada);
 
@@ -131,18 +171,37 @@ public class GestorInspeccion {
         );
         orden.registrarCambioEstado(cambioOrden);
 
-        // 7) Guardar la orden actualizada
+        // 7) Guardar la orden actualizada (Persistencia)
         repoOrdenes.insertar(orden);
 
-        //public void enviarCorreos(Empleado empleado){
-
-        //}
+        // 8) Envío de Notificaciones [Paso 13]
+        enviarNotificaciones(empleado);
     }
 
-   /* public Empleado obtenerEmpleadoLogueado() {
-        if (sesion == null) {
-            throw new IllegalStateException("No hay sesión activa.");
-        }
-        return sesion.obtenerEmpleadoLogueado();
-    }*/
+    // --- MÉTODOS ADICIONALES ---
+
+    public List<MotivoTipo> buscarTiposMotivosFueraDeServicios() {
+        return repoMotivos.buscarTiposMotivosFueraDeServicios();
+    }
+
+    @Transactional(readOnly = true)
+    public List<OrdenDeInspeccion> buscarOrdenesDeInspeccionDeRI(Empleado empleado) {
+        if (empleado == null) return List.of();
+
+        final String NOMBRE_ESTADO_REQUERIDO = "COMPLETAMENTE_REALIZADA";
+        Estado estadoRequerido = repoEstados.buscarEstado(NOMBRE_ESTADO_REQUERIDO);
+        if (estadoRequerido == null || estadoRequerido.getId() == null) return List.of();
+
+        List<OrdenDeInspeccion> ordenesFiltradas = repoOrdenes
+                .findByEmpleado_IdAndEstado_Id(empleado.getId(), estadoRequerido.getId());
+
+        Collections.sort(ordenesFiltradas, Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion,
+                Comparator.nullsLast(Comparator.naturalOrder())));
+        return ordenesFiltradas;
+    }
+
+    private void enviarNotificaciones(Empleado empleado) {
+        // Implementación de simulación de notificaciones
+        System.out.println("LOG: Enviando notificaciones de cierre de orden por el empleado: " + empleado.getNombre());
+    }
 }

@@ -23,8 +23,8 @@ public class Usuario {
     
     @Column(name = "contrasenia", nullable = false)
     private String contrasenia;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne(fetch = FetchType.EAGER) // <-- CAMBIAR DE LAZY A EAGER
     @JoinColumn(name = "empleado_id", nullable = false)
     private Empleado empleado;
     

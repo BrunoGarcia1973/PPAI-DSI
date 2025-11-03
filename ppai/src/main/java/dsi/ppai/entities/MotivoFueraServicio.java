@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "motivo_fuera_servicio", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"cambio_estado_id", "motivo_tipo_id"})
+        @UniqueConstraint(columnNames = {"cambio_estado_id", "motivo_tipo_id"})
 })
 @Data
 @NoArgsConstructor
@@ -16,20 +16,28 @@ public class MotivoFueraServicio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
+    // CAMBIO CLAVE: Relación ManyToOne con CambioEstado
+    // Este campo establece la FK 'cambio_estado_id' en la tabla motivo_fuera_servicio
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cambio_estado_id", nullable = false)
     private CambioEstado cambioEstado;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "motivo_tipo_id", nullable = false)
     private MotivoTipo motivoTipo;
-    
+
     @Column(name = "comentario", columnDefinition = "TEXT")
     private String comentario;
 
+    // Constructor usado en la Interfaz (sin ID ni CambioEstado)
     public MotivoFueraServicio(String comentario, MotivoTipo motivoTipo) {
         this.comentario = comentario;
         this.motivoTipo = motivoTipo;
+    }
+
+    // Setter necesario para establecer la bidireccionalidad en Sismografo.marcarFueraDeServicio
+    public void setCambioEstado(CambioEstado cambioEstado) {
+        this.cambioEstado = cambioEstado;
     }
 }

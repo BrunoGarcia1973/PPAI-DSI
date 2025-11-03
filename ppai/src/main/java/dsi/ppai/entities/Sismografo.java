@@ -19,24 +19,24 @@ public class Sismografo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Column(name = "identificador_sismografo", nullable = false, unique = true)
     private String identificadorSismografo;
-    
+
     @Column(name = "nro_serie", nullable = false)
     private String nroSerie;
-    
+
     @Column(name = "fecha_adquisicion", nullable = false)
     private LocalDate fechaAdquisicion;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estacion_id", nullable = false)
     private EstacionSismologica estacionSismologica;
-    
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estado_actual_id")
     private Estado estadoActual;
-    
+
     @OneToMany(mappedBy = "sismografo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CambioEstado> cambiosDeEstados = new ArrayList<>();
 
@@ -47,45 +47,67 @@ public class Sismografo {
         this.cambiosDeEstados = new ArrayList<>();
     }
 
+    // --- MÉTODOS DE LÓGICA DE ESTADO ---
+
     public boolean tieneEstadoActual() {
         return cambiosDeEstados.stream().anyMatch(CambioEstado::esEstadoActual);
     }
 
-    public void marcarFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados) {
-        // 1) Obtener el cambio de estado actual
-        CambioEstado cambioActual = cambiosDeEstados.stream()
-                .filter(CambioEstado::esEstadoActual)
+    private CambioEstado obtenerCambioEstadoActual() {
+        return cambiosDeEstados.stream()
+                .filter(ce -> ce.getFechaHoraFin() == null)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * Mueve el sismógrafo al estado FUERA DE SERVICIO, registra los motivos y el CambioEstado.
+     * Este método recibe el Empleado y la entidad Estado PERSISTENTE del Gestor.
+     */
+    public void marcarFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados, Empleado empleadoRI, Estado estadoFueraDeServicio) {
+
+        Estado estadoAnterior = this.estadoActual;
+
+        // 1. Finalizar el CambioEstado actual
+        CambioEstado cambioActual = this.obtenerCambioEstadoActual();
         if (cambioActual != null) {
-            cambioActual.setFechaHoraFin(OffsetDateTime.now());
+            cambioActual.cerrarCambio();
         }
-        // 2) Crear el nuevo estado 'FueraDeServicio' y el CambioEstado usando el factory method
-        CambioEstado nuevoCambio = CambioEstado.createFueraDeServicio(
-                cambioActual != null ? cambioActual.getEmpleado() : null,
-                cambioActual != null ? cambioActual.getEstadoNuevo() : null,
+
+        // 2. Crear el nuevo CambioEstado DIRECTAMENTE
+        // Usamos la entidad 'estadoFueraDeServicio' que YA FUE BUSCADA del repositorio.
+        CambioEstado nuevoCambio = new CambioEstado(
+                empleadoRI,
+                estadoAnterior,
+                estadoFueraDeServicio, // Usamos la entidad persistente para evitar TransientPropertyValueException
+                OffsetDateTime.now(),
+                null,
                 motivosSeleccionados
         );
-        nuevoCambio.setSismografo(this);
 
-        // 3) Registrar el nuevo cambio de estado
-        cambiosDeEstados.add(nuevoCambio);
-        
-        // 4) Actualizar estado actual
-        if (nuevoCambio.getEstadoNuevo() != null) {
-            this.estadoActual = nuevoCambio.getEstadoNuevo();
+        // 3. Asociar Motivos al NUEVO CAMBIO DE ESTADO
+        if (motivosSeleccionados != null) {
+            for (MotivoFueraServicio motivo : motivosSeleccionados) {
+                motivo.setCambioEstado(nuevoCambio);
+            }
         }
+
+        // 4. Registrar el nuevo cambio de estado
+        this.agregarCambioEstado(nuevoCambio);
+
+        // 5. Actualizar estado actual de la entidad Sismografo
+        this.estadoActual = estadoFueraDeServicio;
     }
+
+    // --- MÉTODOS AUXILIARES DE PERSISTENCIA Y ENTIDAD ---
+
 
     public Estado getEstadoActual() {
         if (estadoActual != null) {
             return estadoActual;
         }
-        return cambiosDeEstados.stream()
-                .filter(ce -> ce.getFechaHoraFin() == null)
-                .findFirst()
-                .map(CambioEstado::getEstadoNuevo)
-                .orElse(null);
+        CambioEstado cambioActual = obtenerCambioEstadoActual();
+        return cambioActual != null ? cambioActual.getEstadoNuevo() : null;
     }
 
     public void agregarCambioEstado(CambioEstado cambio) {

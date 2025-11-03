@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +22,7 @@ public class OrdenDeInspeccion {
     @ManyToOne
     @JoinColumn(name = "estado_id")
     private Estado estado;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "estacion_sismologica_id")
     private EstacionSismologica estacionSismologica;
     private LocalDateTime fechaHoraFinalizacion;
@@ -49,9 +48,6 @@ public class OrdenDeInspeccion {
         this.cambios = new ArrayList<>(); // Inicializar la lista de cambios
     }
 
-    public OrdenDeInspeccion(String s, OffsetDateTime offsetDateTime, Empleado empleadoRIJuan, OffsetDateTime fechaCierreJuan1, String observacionCierre, Object diagnostico, Estado estadoCompletamenteRealizada, EstacionSismologica estacionSismologicaB, OffsetDateTime offsetDateTime1) {
-    }
-
     public boolean sosCompletamenteRealizada() {
         return this.estado != null && "COMPLETAMENTE_REALIZADA".equals(this.estado.getNombre());
     }
@@ -59,16 +55,6 @@ public class OrdenDeInspeccion {
     public boolean sosDeEmpleado(Empleado empleado) {
         return this.empleado != null && empleado != null &&
                 this.empleado.getLegajo().equals(empleado.getLegajo());
-    }
-
-    public void ponerFueraDeServicio(List<MotivoFueraServicio> motivos, Empleado empleadoLogueado, Estado estadoFueraDeServicio) {
-        if (this.estacionSismologica == null || this.estacionSismologica.getSismografo() == null) {
-            throw new IllegalStateException("La orden no tiene una estación o sismógrafo asociado para marcar fuera de servicio.");
-        }
-        if (motivos == null || motivos.isEmpty()) {
-            throw new IllegalArgumentException("Se deben especificar motivos para poner el sismógrafo fuera de servicio.");
-        }
-        this.estacionSismologica.getSismografo().marcarFueraDeServicio(motivos);
     }
 
     public void registrarCambioEstado(CambioEstado cambio) {
