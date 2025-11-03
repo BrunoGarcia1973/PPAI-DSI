@@ -225,7 +225,7 @@ public class DatosInicialesService {
 
         ordenJuan3.registrarCambioEstado(new CambioEstado(empleadoRI_Juan, estadoAbierta, estadoCompletamenteRealizada, OffsetDateTime.now().minusHours(2).minusMinutes(5), OffsetDateTime.now().minusHours(2), null));
         ordenJuan3.setEstado(estadoCompletamenteRealizada);
-        ordenJuan3.setFechaHoraFinalizacion(OffsetDateTime.now().minusHours(2));
+        ordenJuan3.setFechaHoraFinalizacion(OffsetDateTime.now().minusHours(2).toLocalDateTime());
         repoOrdenes.insertar(ordenJuan3);
 
         OrdenDeInspeccion ordenJuan4 = new OrdenDeInspeccion(
@@ -242,7 +242,7 @@ public class DatosInicialesService {
 
         ordenJuan4.registrarCambioEstado(new CambioEstado(empleadoRI_Juan, estadoAbierta, estadoCompletamenteRealizada, OffsetDateTime.now().minusDays(2).minusHours(19), OffsetDateTime.now().minusDays(2).minusHours(18), null));
         ordenJuan4.setEstado(estadoCompletamenteRealizada);
-        ordenJuan4.setFechaHoraFinalizacion(OffsetDateTime.now().minusDays(2).minusHours(18));
+        ordenJuan4.setFechaHoraFinalizacion(OffsetDateTime.now().minusDays(2).minusHours(18).toLocalDateTime());
         repoOrdenes.insertar(ordenJuan4);
 
         // --- ÓRDENES PARA LAURA (Empleado con legajo 2002) ---
@@ -275,7 +275,7 @@ public class DatosInicialesService {
         );
         ordenCarlos1.registrarCambioEstado(new CambioEstado(empleadoRI_Carlos, null, estadoAbierta, OffsetDateTime.now().minusDays(7), null, null));
         ordenCarlos1.setEstado(estadoCompletamenteRealizada);
-        ordenCarlos1.setFechaHoraFinalizacion(OffsetDateTime.now().minusDays(6).minusHours(10));
+        ordenCarlos1.setFechaHoraFinalizacion(OffsetDateTime.now().minusDays(6).minusHours(10).toLocalDateTime());
         repoOrdenes.insertar(ordenCarlos1);
 
         System.out.println("Órdenes de Inspección inicializadas.");

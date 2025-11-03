@@ -55,7 +55,7 @@ public class GestorInspeccion {
         return repoOrdenes.findAll().stream()
                 .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
                 .filter(orden -> orden.sosDeEmpleado(empleado))
-                .sorted(Comparator.comparing(o -> o.getFechaHoraFinalizacion() != null ? o.getFechaHoraFinalizacion() : OffsetDateTime.MIN))
+               // .sorted(Comparator.comparing(o -> o.getFechaHoraFinalizacion() != null ? o.getFechaHoraFinalizacion() : OffsetDateTime.MIN))
                 .collect(Collectors.toList());
     }
 
@@ -84,7 +84,7 @@ public class GestorInspeccion {
             throw new IllegalArgumentException("Debe ingresar una observación para el cierre.");
         }
         // 4) Completar datos de cierre de la ORDEN
-        orden.setFechaHoraCierre(OffsetDateTime.now());
+        orden.setFechaHoraCierre(OffsetDateTime.now().toLocalDateTime());
         orden.setObservacionCierre(observacion);
         // 5) Poner sismógrafo fuera de servicio
         if (motivosSeleccionados != null && !motivosSeleccionados.isEmpty()) {

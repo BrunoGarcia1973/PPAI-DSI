@@ -49,7 +49,7 @@ public class InterfazInspeccion {
     }
 
     public void start(Stage primaryStage) {
-        simularLogin("1001"); // Logueamos a Juan Pérez (legajo 1001)
+       // simularLogin("1001"); // Logueamos a Juan Pérez (legajo 1001)
 
         primaryStage.setTitle("Sistema de Cierre de Órdenes de Inspección");
 
@@ -70,11 +70,11 @@ public class InterfazInspeccion {
         filterBox.setPadding(new Insets(0, 0, 10, 0));
         Label lblSelectEmployee = new Label("Ver órdenes de:");
         cmbEmpleados = new ComboBox<>();
-        cargarEmpleadosEnComboBox(); // Cargar la lista de empleados
+        //  cargarEmpleadosEnComboBox(); // Cargar la lista de empleados
         cmbEmpleados.setPromptText("Seleccione un Empleado"); // Texto por defecto
         // Listener para cuando se selecciona un empleado
         cmbEmpleados.valueProperty().addListener((obs, oldVal, newVal) -> {
-            mostrarOrdCompRealizadas(newVal); // Recargar la tabla con el empleado seleccionado
+            //mostrarOrdCompRealizadas(newVal); // Recargar la tabla con el empleado seleccionado
         });
 
         filterBox.getChildren().addAll(lblSelectEmployee, cmbEmpleados);

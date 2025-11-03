@@ -1,5 +1,4 @@
 package dsi.ppai.repositories;
-
 import dsi.ppai.entities.OrdenDeInspeccion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +11,7 @@ import java.util.Optional;
 @Repository
 public interface RepositorioOrdenes extends JpaRepository<OrdenDeInspeccion, Long> {
     
-    Optional<OrdenDeInspeccion> findByNumeroOrden(String numeroOrden);
+    Optional<OrdenDeInspeccion> findByNumOrden(Long numOrden);
     
     @Query("SELECT o FROM OrdenDeInspeccion o " +
            "LEFT JOIN FETCH o.empleado " +

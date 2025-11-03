@@ -5,61 +5,40 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 @Entity
-@Table(name = "orden_de_inspeccion")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class OrdenDeInspeccion {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column(name = "numero_orden", nullable = false, unique = true)
-    private String numeroOrden;
-    
-    @Column(name = "fecha_hora_inicio")
-    private OffsetDateTime fechaHoraInicio;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsable_inspeccion_id", nullable = false)
+    private Long numOrden;
+    private LocalDateTime fechaHoraInicio;
+    @ManyToOne
+    @JoinColumn(name = "empleado_id")
     private Empleado empleado;
-    
-    @Column(name = "fecha_hora_cierre")
-    private OffsetDateTime fechaHoraCierre;
-    
-    @Column(name = "observacion_cierre", columnDefinition = "TEXT")
+    private LocalDateTime fechaHoraCierre;
     private String observacionCierre;
-    
-    @Column(name = "fecha_hora_finalizacion")
-    private OffsetDateTime fechaHoraFinalizacion;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "estado_actual_id")
+    private String diagnostico;
+    @ManyToOne
+    @JoinColumn(name = "estado_id")
     private Estado estado;
-    
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "estacion_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "estacion_sismologica_id")
     private EstacionSismologica estacionSismologica;
-    
-    @OneToMany(mappedBy = "ordenInspeccion", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CambioEstado> cambios = new ArrayList<>();
-    
-    @Transient
-    private String diagnostico; // Campo no presente en DDL, mantenerlo transitorio
+    private LocalDateTime fechaHoraFinalizacion;
+    @OneToMany(mappedBy = "ordenInspeccion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<CambioEstado> cambios; // Esto es una colección de entidades relacionadas
 
-    public Long getNumOrden() {
-        return this.id;
-    }
+    // ...    @Id
+    @Id
+    private Long id;
 
-    public OrdenDeInspeccion(String numeroOrden, OffsetDateTime fechaHoraInicio, Empleado empleado,
-                             OffsetDateTime fechaHoraCierre, String observacionCierre, String diagnostico,
-                             Estado estado, EstacionSismologica estacionSismologica, OffsetDateTime fechaHoraFinalizacion) {
-        this.numeroOrden = numeroOrden;
+    public OrdenDeInspeccion(Long numOrden, LocalDateTime fechaHoraInicio, Empleado empleado,
+                             LocalDateTime fechaHoraCierre, String observacionCierre, String diagnostico,
+                             Estado estado, EstacionSismologica estacionSismologica, LocalDateTime fechaHoraFinalizacion) {
+        this.numOrden = numOrden;
         this.fechaHoraInicio = fechaHoraInicio;
         this.empleado = empleado;
         this.fechaHoraCierre = fechaHoraCierre;
@@ -68,7 +47,10 @@ public class OrdenDeInspeccion {
         this.estado = estado;
         this.estacionSismologica = estacionSismologica;
         this.fechaHoraFinalizacion = fechaHoraFinalizacion;
-        this.cambios = new ArrayList<>();
+        this.cambios = new ArrayList<>(); // Inicializar la lista de cambios
+    }
+
+    public OrdenDeInspeccion(String s, OffsetDateTime offsetDateTime, Empleado empleadoRIJuan, OffsetDateTime fechaCierreJuan1, String observacionCierre, Object diagnostico, Estado estadoCompletamenteRealizada, EstacionSismologica estacionSismologicaB, OffsetDateTime offsetDateTime1) {
     }
 
     public boolean sosCompletamenteRealizada() {
@@ -94,7 +76,7 @@ public class OrdenDeInspeccion {
         if (this.cambios == null) {
             this.cambios = new ArrayList<>();
         }
-        cambio.setOrdenInspeccion(this);
         this.cambios.add(cambio);
     }
+
 }
