@@ -1,43 +1,39 @@
 package dsi.ppai.repositories;
 
 import dsi.ppai.entities.Sismografo;
-import org.springframework.stereotype.Component;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger; // Importante: cambiamos a AtomicInteger
+import java.util.Optional;
 
-@Component
-public class RepositorioSismografos {
-
-    private final Map<Integer, Sismografo> sismografos = new HashMap<>();
-    private final AtomicInteger nextId = new AtomicInteger(1);
-
-    public void guardar(Sismografo sismografo) {
-        if (sismografo.getIdentificadorSismografo() == null) {
-            sismografo.setIdentificadorSismografo(nextId.getAndIncrement());
-        }
-        sismografos.put(sismografo.getIdentificadorSismografo(), sismografo);
+@Repository
+public interface RepositorioSismografos extends JpaRepository<Sismografo, Long> {
+    
+    Optional<Sismografo> findByIdentificadorSismografo(String identificadorSismografo);
+    
+    Optional<Sismografo> findByNroSerie(String nroSerie);
+    
+    List<Sismografo> findByEstacionSismologicaEstacionId(Long estacionId);
+    
+    // Métodos de compatibilidad con código existente
+    default void guardar(Sismografo sismografo) {
+        save(sismografo);
     }
-
-    public Sismografo buscar(Integer id) { // Buscar por Integer
-        return sismografos.get(id);
+    
+    default Sismografo buscar(Long id) {
+        return findById(id).orElse(null);
     }
-
-    public List<Sismografo> buscarTodos() {
-        return new ArrayList<>(sismografos.values());
+    
+    default List<Sismografo> buscarTodos() {
+        return findAll();
     }
-
-    public void eliminar(Integer id) { // Eliminar por Integer
-        sismografos.remove(id);
+    
+    default void eliminar(Long id) {
+        deleteById(id);
     }
-
-    public Sismografo buscarPorNroSerie(Integer nroSerie) { // Buscar por Integer nroSerie
-        return sismografos.values().stream()
-                .filter(s -> s.getNroSerie() != null && s.getNroSerie().equals(nroSerie))
-                .findFirst()
-                .orElse(null);
+    
+    default Sismografo buscarPorNroSerie(String nroSerie) {
+        return findByNroSerie(nroSerie).orElse(null);
     }
 }

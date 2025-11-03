@@ -1,31 +1,65 @@
 package dsi.ppai.entities;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "orden_de_inspeccion")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class OrdenDeInspeccion {
-    private Long numOrden;
-    private LocalDateTime fechaHoraInicio;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "numero_orden", nullable = false, unique = true)
+    private String numeroOrden;
+    
+    @Column(name = "fecha_hora_inicio")
+    private OffsetDateTime fechaHoraInicio;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsable_inspeccion_id", nullable = false)
     private Empleado empleado;
-    private LocalDateTime fechaHoraCierre;
+    
+    @Column(name = "fecha_hora_cierre")
+    private OffsetDateTime fechaHoraCierre;
+    
+    @Column(name = "observacion_cierre", columnDefinition = "TEXT")
     private String observacionCierre;
-    private String diagnostico;
+    
+    @Column(name = "fecha_hora_finalizacion")
+    private OffsetDateTime fechaHoraFinalizacion;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "estado_actual_id")
     private Estado estado;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "estacion_id", nullable = false)
     private EstacionSismologica estacionSismologica;
-    private LocalDateTime fechaHoraFinalizacion;
-    private List<CambioEstado> cambios;
+    
+    @OneToMany(mappedBy = "ordenInspeccion", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CambioEstado> cambios = new ArrayList<>();
+    
+    @Transient
+    private String diagnostico; // Campo no presente en DDL, mantenerlo transitorio
 
-    public OrdenDeInspeccion(Long numOrden, LocalDateTime fechaHoraInicio, Empleado empleado,
-                             LocalDateTime fechaHoraCierre, String observacionCierre, String diagnostico,
-                             Estado estado, EstacionSismologica estacionSismologica, LocalDateTime fechaHoraFinalizacion) {
-        this.numOrden = numOrden;
+    public Long getNumOrden() {
+        return this.id;
+    }
+
+    public OrdenDeInspeccion(String numeroOrden, OffsetDateTime fechaHoraInicio, Empleado empleado,
+                             OffsetDateTime fechaHoraCierre, String observacionCierre, String diagnostico,
+                             Estado estado, EstacionSismologica estacionSismologica, OffsetDateTime fechaHoraFinalizacion) {
+        this.numeroOrden = numeroOrden;
         this.fechaHoraInicio = fechaHoraInicio;
         this.empleado = empleado;
         this.fechaHoraCierre = fechaHoraCierre;
@@ -34,7 +68,7 @@ public class OrdenDeInspeccion {
         this.estado = estado;
         this.estacionSismologica = estacionSismologica;
         this.fechaHoraFinalizacion = fechaHoraFinalizacion;
-        this.cambios = new ArrayList<>(); // Inicializar la lista de cambios
+        this.cambios = new ArrayList<>();
     }
 
     public boolean sosCompletamenteRealizada() {
@@ -60,10 +94,7 @@ public class OrdenDeInspeccion {
         if (this.cambios == null) {
             this.cambios = new ArrayList<>();
         }
+        cambio.setOrdenInspeccion(this);
         this.cambios.add(cambio);
-    }
-
-    public List<OrdenDeInspeccion> obtenerDatosDeOI(){
-
     }
 }

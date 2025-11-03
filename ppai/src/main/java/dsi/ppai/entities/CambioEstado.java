@@ -1,53 +1,80 @@
 package dsi.ppai.entities;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@Entity
+@Table(name = "cambio_estado")
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class CambioEstado {
-    private Empleado empleado;
-    private Estado estadoAnterior;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "ambito", nullable = false)
+    private Estado.AmbitoEstado ambito;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sismografo_id")
+    private Sismografo sismografo;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orden_inspeccion_id")
+    private OrdenDeInspeccion ordenInspeccion;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "estado_id", nullable = false)
     private Estado estadoNuevo;
-    private LocalDateTime fechaHoraInicio;
-    private LocalDateTime fechaHoraFin;
-    private List<MotivoFueraServicio> motivosSeleccionados;
+    
+    @Column(name = "fecha_hora_inicio", nullable = false)
+    private OffsetDateTime fechaHoraInicio;
+    
+    @Column(name = "fecha_hora_fin")
+    private OffsetDateTime fechaHoraFin;
+    
+    @OneToMany(mappedBy = "cambioEstado", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MotivoFueraServicio> motivosSeleccionados = new ArrayList<>();
+    
+    @Transient
+    private Empleado empleado; // No está directamente en la tabla, puede obtenerse de otra manera
+    
+    @Transient
+    private Estado estadoAnterior; // Campo calculado o transitorio
 
     // Constructor principal usado por entidades y DatosInicialesService
-    public CambioEstado(Empleado empleado, Estado estadoAnterior, Estado estadoNuevo, LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, List<MotivoFueraServicio> motivosSeleccionados) {
+    public CambioEstado(Empleado empleado, Estado estadoAnterior, Estado estadoNuevo, OffsetDateTime fechaHoraInicio, OffsetDateTime fechaHoraFin, List<MotivoFueraServicio> motivosSeleccionados) {
         this.empleado = empleado;
         this.estadoAnterior = estadoAnterior;
         this.estadoNuevo = estadoNuevo;
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
         this.motivosSeleccionados = (motivosSeleccionados != null) ? new ArrayList<>(motivosSeleccionados) : new ArrayList<>();
+        if (estadoNuevo != null) {
+            this.ambito = estadoNuevo.getAmbito();
+        }
     }
 
-    /**
-     * Factory method para crear un cambio de estado "FUERA_DE_SERVICIO".
-     * Este método es llamado por Sismografo.marcarFueraDeServicio().
-     * Se asume que el Estado "FUERA_DE_SERVICIO" ya existe en el RepositorioEstados.
-     * @param empleado El empleado que realiza el cambio.
-     * @param estadoAnterior El estado en el que se encontraba el sismógrafo antes de este cambio.
-     * @param motivosFueraServicio Los motivos seleccionados para poner el sismógrafo fuera de servicio.
-     * @return Una nueva instancia de CambioEstado con el estado "FUERA_DE_SERVICIO".
-     */
     public static CambioEstado createFueraDeServicio(
             Empleado empleado,
             Estado estadoAnterior,
             List<MotivoFueraServicio> motivosFueraServicio
     ) {
         Estado estadoFueraDeServicio = new Estado("FUERA_DE_SERVICIO");
+        estadoFueraDeServicio.setAmbito(Estado.AmbitoEstado.SISMOGRAFO);
         return new CambioEstado(
                 empleado,
                 estadoAnterior,
                 estadoFueraDeServicio,
-                LocalDateTime.now(),
+                OffsetDateTime.now(),
                 null,
                 motivosFueraServicio
         );
@@ -58,6 +85,6 @@ public class CambioEstado {
     }
 
     public void cerrarCambio() {
-        this.fechaHoraFin = LocalDateTime.now();
+        this.fechaHoraFin = OffsetDateTime.now();
     }
 }

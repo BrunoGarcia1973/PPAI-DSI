@@ -4,9 +4,9 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 import org.springframework.boot.WebApplicationType;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.boot.autoconfigure.SpringBootApplication; // Importar SpringBootApplication
 
 @SpringBootApplication
 public class PpaiApplication extends Application {

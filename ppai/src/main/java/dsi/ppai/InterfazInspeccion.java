@@ -104,11 +104,33 @@ public class InterfazInspeccion {
     private void simularLogin(String legajo) {
         System.out.println("--- SIMULANDO LOGIN ---");
         try {
-            Usuario usuario = new Usuario("usuario" + legajo, repoEmpleados.buscarEmpleadoPorLegajo(legajo));
-            if (usuario.obtenerEmpleado() == null) {
-                showAlert(Alert.AlertType.ERROR, "Error de Login", "No se encontró el empleado con legajo: " + legajo);
-                Platform.exit();
+            Empleado empleado = repoEmpleados.buscarEmpleadoPorLegajo(legajo);
+            // Si no se encuentra por legajo, buscar el primero disponible o por email
+            if (empleado == null) {
+                // Buscar por email basado en el legajo conocido
+                if ("1001".equals(legajo)) {
+                    empleado = repoEmpleados.findByEmail("juan.perez@example.com").orElse(null);
+                } else if ("2002".equals(legajo)) {
+                    empleado = repoEmpleados.findByEmail("laura.gomez@example.com").orElse(null);
+                } else if ("3003".equals(legajo)) {
+                    empleado = repoEmpleados.findByEmail("carlos.r@example.com").orElse(null);
+                }
+                // Si aún no se encuentra, usar el primer empleado disponible
+                if (empleado == null) {
+                    var empleados = repoEmpleados.findAll();
+                    if (!empleados.isEmpty()) {
+                        empleado = empleados.get(0);
+                    }
+                }
             }
+            
+            if (empleado == null) {
+                showAlert(Alert.AlertType.ERROR, "Error de Login", "No se encontró ningún empleado disponible.");
+                Platform.exit();
+                return;
+            }
+            
+            Usuario usuario = new Usuario("usuario" + legajo, empleado);
             sesion.setUsuarioLogueado(usuario);
             System.out.println("Empleado '" + sesion.obtenerEmpleadoLogueado().getNombre() + "' logueado exitosamente.");
         } catch (Exception e) {
@@ -132,10 +154,10 @@ public class InterfazInspeccion {
         });
         colEstacion.setPrefWidth(150);
 
-        TableColumn<OrdenDeInspeccion, Integer> colSismografoId = new TableColumn<>("Sismógrafo ID");
+        TableColumn<OrdenDeInspeccion, String> colSismografoId = new TableColumn<>("Sismógrafo ID");
         colSismografoId.setCellValueFactory(cellData -> {
             OrdenDeInspeccion orden = cellData.getValue();
-            return new javafx.beans.property.SimpleObjectProperty<>(orden.getEstacionSismologica().getSismografo().getIdentificadorSismografo());
+            return new javafx.beans.property.SimpleStringProperty(orden.getEstacionSismologica().getSismografo().getIdentificadorSismografo());
         });
         colSismografoId.setPrefWidth(120);
 

@@ -1,46 +1,38 @@
 package dsi.ppai.repositories;
 
 import dsi.ppai.entities.Empleado;
-import dsi.ppai.entities.Rol;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Repository
-public class RepositorioEmpleados {
-
-    private final Map<String, Empleado> empleados = new HashMap<>();
-
-    public RepositorioEmpleados() {
-        // Roles de ejemplo
-        Rol responsableDeInspeccion = new Rol("RESPONSABLE_DE_INSPECCION", "Responsable de las inspecciones de sismógrafos.");
-        Rol tecnico = new Rol("TECNICO", "Técnico encargado del mantenimiento.");
-        Rol administrador = new Rol("ADMINISTRADOR", "Administrador del sistema.");
-        Rol sysUser = new Rol("SISTEMA", "Usuario para operaciones del sistema.");
-
-        // Empleados de prueba
-        empleados.put("1001", new Empleado("1001", "Juan", "Pérez", "juan.perez@example.com", "3511112222", responsableDeInspeccion));
-        empleados.put("2002", new Empleado("2002", "Laura", "Gómez", "laura.gomez@example.com", "3513334444", responsableDeInspeccion));
-        empleados.put("3003", new Empleado("3003", "Carlos", "Rodríguez", "carlos.r@example.com", "3515556666", responsableDeInspeccion));
-        empleados.put("4004", new Empleado("4004", "Ana", "Díaz", "ana.d@example.com", "3517778888", tecnico));
-        empleados.put("SYS", new Empleado("SYS", "Sistema", "Automatizado", "sistema@example.com", "0000000000", sysUser));
+public interface RepositorioEmpleados extends JpaRepository<Empleado, Long> {
+    
+    Optional<Empleado> findByEmail(String email);
+    
+    // Método para buscar por legajo (que es el ID convertido a String)
+    default Empleado buscarEmpleadoPorLegajo(String legajo) {
+        try {
+            Long id = Long.parseLong(legajo);
+            return findById(id).orElse(null);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
-
-    public Empleado buscarEmpleadoPorLegajo(String legajo) {
-        return empleados.get(legajo);
-    }
-
-    public List<Empleado> buscarResponsablesDeInspeccion() {
-        return empleados.values().stream()
-                .filter(Empleado::esResponsableDeInspeccion)
-                .collect(Collectors.toList());
-    }
-
-    public List<Empleado> findAll() {
-        return new ArrayList<>(empleados.values());
+    
+    // Método para buscar responsables de inspección
+    // Consulta basada en la relación Empleado -> Usuario -> Rol
+    @Query("SELECT DISTINCT e FROM Empleado e JOIN e.usuarios u JOIN u.roles r WHERE r.nombre = 'RESPONSABLE_DE_INSPECCION'")
+    List<Empleado> findResponsablesDeInspeccion();
+    
+    // Método de compatibilidad
+    default List<Empleado> buscarResponsablesDeInspeccion() {
+        // Por ahora retornamos todos los empleados que tengan rol de responsable
+        // Esto se puede mejorar consultando la relación Usuario -> Rol
+        return findResponsablesDeInspeccion();
     }
 }

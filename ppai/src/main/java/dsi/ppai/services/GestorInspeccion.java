@@ -7,7 +7,9 @@ import dsi.ppai.repositories.RepositorioOrdenes;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +25,7 @@ public class GestorInspeccion {
     private final RepositorioMotivoTipo repoMotivos;
 
     //Buscar órdenes de inspección del RI que están COMPLETAMENTE realizadas.
+    @Transactional(readOnly = true)
     public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI() {
         Empleado empleado = sesion.obtenerEmpleadoLogueado();
         if (empleado == null) {
@@ -42,6 +45,7 @@ public class GestorInspeccion {
         return repoMotivos.buscarTiposMotivosFueraDeServicios();
     }
     //Buscar órdenes de inspección del RI seleccionado
+    @Transactional(readOnly = true)
     public List<OrdenDeInspeccion> buscarOrdenesDeInspeccionDeRI(Empleado empleado) {
         if (empleado == null) {
             System.out.println("Advertencia: Se intentó buscar órdenes para un empleado nulo.");
@@ -51,10 +55,11 @@ public class GestorInspeccion {
         return repoOrdenes.findAll().stream()
                 .filter(OrdenDeInspeccion::sosCompletamenteRealizada)
                 .filter(orden -> orden.sosDeEmpleado(empleado))
-                .sorted(Comparator.comparing(OrdenDeInspeccion::getFechaHoraFinalizacion))
+                .sorted(Comparator.comparing(o -> o.getFechaHoraFinalizacion() != null ? o.getFechaHoraFinalizacion() : OffsetDateTime.MIN))
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void cerrarOrden(Long numeroOrden,
                             String observacion,
                             List<MotivoFueraServicio> motivosSeleccionados) {
@@ -79,7 +84,7 @@ public class GestorInspeccion {
             throw new IllegalArgumentException("Debe ingresar una observación para el cierre.");
         }
         // 4) Completar datos de cierre de la ORDEN
-        orden.setFechaHoraCierre(LocalDateTime.now());
+        orden.setFechaHoraCierre(OffsetDateTime.now());
         orden.setObservacionCierre(observacion);
         // 5) Poner sismógrafo fuera de servicio
         if (motivosSeleccionados != null && !motivosSeleccionados.isEmpty()) {
@@ -102,7 +107,7 @@ public class GestorInspeccion {
                 empleado,
                 estadoAnteriorOrden,
                 estadoCerrada,
-                LocalDateTime.now(),
+                OffsetDateTime.now(),
                 null,
                 null
         );

@@ -1,39 +1,50 @@
 package dsi.ppai.repositories;
 
 import dsi.ppai.entities.OrdenDeInspeccion;
-import org.springframework.stereotype.Component;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
-@Component
-public class RepositorioOrdenes {
-
-    private final Map<Long, OrdenDeInspeccion> ordenes = new HashMap<>();
-    private final AtomicLong nextId = new AtomicLong(1);
-
-    public void insertar(OrdenDeInspeccion orden) {
-        if (orden.getNumOrden() == null) {
-            orden.setNumOrden(nextId.getAndIncrement());
+@Repository
+public interface RepositorioOrdenes extends JpaRepository<OrdenDeInspeccion, Long> {
+    
+    Optional<OrdenDeInspeccion> findByNumeroOrden(String numeroOrden);
+    
+    @Query("SELECT o FROM OrdenDeInspeccion o " +
+           "LEFT JOIN FETCH o.empleado " +
+           "LEFT JOIN FETCH o.estado " +
+           "LEFT JOIN FETCH o.estacionSismologica " +
+           "WHERE o.empleado.id = :empleadoId")
+    List<OrdenDeInspeccion> findByEmpleadoIdWithRelations(@Param("empleadoId") Long empleadoId);
+    
+    @Query("SELECT o FROM OrdenDeInspeccion o " +
+           "LEFT JOIN FETCH o.empleado " +
+           "LEFT JOIN FETCH o.estado " +
+           "LEFT JOIN FETCH o.estacionSismologica")
+    @Override
+    List<OrdenDeInspeccion> findAll();
+    
+    // Método para buscar por legajo del empleado (compatibilidad con código existente)
+    default List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI(String legajoRI) {
+        try {
+            Long empleadoId = Long.parseLong(legajoRI);
+            return findByEmpleadoIdWithRelations(empleadoId);
+        } catch (NumberFormatException e) {
+            return List.of();
         }
-        ordenes.put(orden.getNumOrden(), orden);
     }
-
-    public OrdenDeInspeccion buscarOrdenDeInspeccion(Long numeroOrden) {
-        return ordenes.get(numeroOrden);
+    
+    // Método de compatibilidad con código existente
+    default OrdenDeInspeccion buscarOrdenDeInspeccion(Long numeroOrden) {
+        return findById(numeroOrden).orElse(null);
     }
-
-    public List<OrdenDeInspeccion> buscarOrdenesInspeccionDeRI(String legajoRI) {
-        return ordenes.values().stream()
-                .filter(o -> o.getEmpleado() != null && o.getEmpleado().getLegajo().equals(legajoRI))
-                .collect(Collectors.toList());
-    }
-
-    public List<OrdenDeInspeccion> findAll() {
-        return new ArrayList<>(ordenes.values());
+    
+    // Método de compatibilidad - insertar es guardar
+    default void insertar(OrdenDeInspeccion orden) {
+        save(orden);
     }
 }
