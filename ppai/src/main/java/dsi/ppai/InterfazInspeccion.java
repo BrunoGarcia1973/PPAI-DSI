@@ -26,9 +26,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
-// Clases internas necesarias para métodos auxiliares (las definimos al final de la clase)
-// import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 @Component
 public class InterfazInspeccion {
@@ -53,18 +52,15 @@ public class InterfazInspeccion {
     }
 
     public void start(Stage primaryStage) {
-        // 1. INICIAR LOGIN INTERACTIVO.
         if (!solicitarYLoguearEmpleado()) {
             Platform.exit();
             return;
         }
 
-        // 2. CONFIGURACIÓN DE LA VENTANA PRINCIPAL (SOLO SI EL LOGIN FUE EXITOSO)
         primaryStage.setTitle("Sistema de Cierre de Órdenes de Inspección");
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(10));
 
-        // 3. SECCIÓN SUPERIOR: USUARIO LOGUEADO
         labelUsuarioLogueado = new Label();
         actualizarInfoUsuario();
 
@@ -72,24 +68,20 @@ public class InterfazInspeccion {
         topBox.setPadding(new Insets(5));
         topBox.setAlignment(Pos.CENTER_LEFT);
 
-        // --- Filter Section: Employee Selection ---
         HBox filterBox = new HBox(10);
         cmbEmpleados = new ComboBox<>();
-        // Listener para cuando se selecciona un empleado (IMPLEMENTACIÓN PENDIENTE DE LÓGICA DE FILTRO)
         cmbEmpleados.valueProperty().addListener((obs, oldVal, newVal) -> mostrarOrdCompRealizadas(newVal));
 
         filterBox.getChildren().addAll(new Label("Ver órdenes de:"), cmbEmpleados);
         VBox topCombinedBox = new VBox(5, topBox, filterBox);
         root.setTop(topCombinedBox);
 
-        // 4. SECCIÓN CENTRAL: TABLA
         tablaOrdenes = new TableView<>();
-        setupTablaOrdenes(); // <--- IMPLEMENTADO
+        setupTablaOrdenes();
         root.setCenter(tablaOrdenes);
 
-        // 5. SECCIÓN INFERIOR: BOTONES
         Button btnCerrarOrden = new Button("Cerrar Orden Seleccionada");
-        btnCerrarOrden.setOnAction(e -> iniciarCierreOrdenInspeccion()); // Lógica pendiente
+        btnCerrarOrden.setOnAction(e -> iniciarCierreOrdenInspeccion());
         Button btnSalir = new Button("Salir");
         btnSalir.setOnAction(e -> Platform.exit());
         HBox bottomBox = new HBox(10, btnCerrarOrden, btnSalir);
@@ -100,8 +92,7 @@ public class InterfazInspeccion {
         primaryStage.setScene(scene);
         primaryStage.show();
 
-        // 6. CARGAR DATOS INICIALES
-        mostrarOrdCompRealizadas(null); // <--- IMPLEMENTADO
+        mostrarOrdCompRealizadas(null);
     }
 
     // --- MÉTODOS DE BÚSQUEDA Y TABLA ---
@@ -113,7 +104,6 @@ public class InterfazInspeccion {
         colNumOrden.setCellValueFactory(new PropertyValueFactory<>("numOrden"));
         colNumOrden.setPrefWidth(80);
 
-        // Columna para la Estación Sismológica (Accede a la relación anidada)
         TableColumn<OrdenDeInspeccion, String> colEstacion = new TableColumn<>("Estación Sismológica");
         colEstacion.setCellValueFactory(cellData -> {
             OrdenDeInspeccion orden = cellData.getValue();
@@ -123,7 +113,6 @@ public class InterfazInspeccion {
         });
         colEstacion.setPrefWidth(150);
 
-        // Columna para el Sismógrafo ID (Accede a la relación anidada)
         TableColumn<OrdenDeInspeccion, String> colSismografoId = new TableColumn<>("Sismógrafo ID");
         colSismografoId.setCellValueFactory(cellData -> {
             OrdenDeInspeccion orden = cellData.getValue();
@@ -134,7 +123,6 @@ public class InterfazInspeccion {
         });
         colSismografoId.setPrefWidth(120);
 
-        // Columna para el Estado Actual (Accede a la relación)
         TableColumn<OrdenDeInspeccion, String> colEstado = new TableColumn<>("Estado Actual");
         colEstado.setCellValueFactory(cellData -> {
             OrdenDeInspeccion orden = cellData.getValue();
@@ -144,7 +132,6 @@ public class InterfazInspeccion {
         });
         colEstado.setPrefWidth(120);
 
-        // Columna para la Fecha de Finalización
         TableColumn<OrdenDeInspeccion, String> colFechaFin = new TableColumn<>("Fecha Finalización");
         colFechaFin.setCellValueFactory(cellData -> {
             OrdenDeInspeccion orden = cellData.getValue();
@@ -157,23 +144,25 @@ public class InterfazInspeccion {
         tablaOrdenes.getColumns().addAll(colNumOrden, colEstacion, colSismografoId, colEstado, colFechaFin);
     }
 
-    // En InterfazInspeccion.java
-
     private void mostrarOrdCompRealizadas(Empleado empleadoSeleccionado) {
         try {
             List<OrdenDeInspeccion> ordenes;
             Empleado empleadoLogueado = sesion.obtenerEmpleadoLogueado();
 
-            // ... (lógica de obtención de órdenes y validación)
+            if (empleadoLogueado == null) {
+                showAlert(Alert.AlertType.ERROR, "Error de Carga", "No hay un usuario logueado. No se pueden cargar órdenes.");
+                return;
+            }
 
-            // Determina qué empleado usar para el filtro
             Empleado empleadoFiltro = (empleadoSeleccionado != null) ? empleadoSeleccionado : empleadoLogueado;
 
             if (empleadoSeleccionado == null) {
-                System.out.println("DEBUG: Buscando órdenes para RI Logueado (ID: " + empleadoFiltro.getId() + ")");
+                // LLAMADA 1: Para el usuario logueado (SIN el sufijo 'De')
+                // Firma en Gestor: buscarOrdenesInspeccionDeRI()
                 ordenes = gestorInspeccion.buscarOrdenesInspeccionDeRI();
             } else {
-                System.out.println("DEBUG: Buscando órdenes para Empleado Seleccionado (ID: " + empleadoFiltro.getId() + ")");
+                // LLAMADA 2: Para el usuario seleccionado (CON el sufijo 'De')
+                // Firma en Gestor: buscarOrdenesDeInspeccionDeRI(Empleado empleado)
                 ordenes = gestorInspeccion.buscarOrdenesDeInspeccionDeRI(empleadoFiltro);
             }
 
@@ -183,23 +172,6 @@ public class InterfazInspeccion {
 
             System.out.println("DEBUG: Gestor devolvió " + ordenes.size() + " órdenes.");
 
-            // *** CÓDIGO DE DIAGNÓSTICO AÑADIDO ***
-            if (!ordenes.isEmpty()) {
-                System.out.println("--- DIAGNÓSTICO DE DATOS ---");
-                for (OrdenDeInspeccion orden : ordenes) {
-                    // Imprimimos solo los campos básicos, evitando getters de relaciones LAZY
-                    System.out.println(
-                            "| ORDEN N°: " + orden.getNumOrden() +
-                                    " | ID: " + orden.getId() +
-                                    " | FECHA FIN: " + orden.getFechaHoraFinalizacion() +
-                                    " | ESTADO: " + (orden.getEstado() != null ? orden.getEstado().getNombre() : "ERROR: Estado NULL")
-                            // No intentar acceder aquí a Sismografo/EstacionSismologica si son LAZY
-                    );
-                }
-                System.out.println("---------------------------");
-            }
-            // **********************************
-
             ObservableList<OrdenDeInspeccion> observableOrdenes = FXCollections.observableArrayList(ordenes);
             tablaOrdenes.setItems(observableOrdenes);
 
@@ -207,63 +179,13 @@ public class InterfazInspeccion {
                 showAlert(Alert.AlertType.INFORMATION, "Información", "No se encontraron órdenes de inspección 'Completamente Realizadas' para este empleado.");
             }
         } catch (Exception e) {
-            // ... (manejo de excepciones)
+            showAlert(Alert.AlertType.ERROR, "Error al Cargar Órdenes", "No se pudieron cargar las órdenes de inspección: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
 
-    // --- MÉTODOS DE LOGIN Y AUXILIARES (SE MANTIENEN IGUAL) ---
-
-    private void actualizarInfoUsuario() {
-        Empleado empleado = sesion.obtenerEmpleadoLogueado();
-        if (empleado != null) {
-            labelUsuarioLogueado.setText("Usuario: " + empleado.getNombre() + " " + empleado.getApellido() + " (Legajo: " + empleado.getLegajo() + ")");
-        } else {
-            labelUsuarioLogueado.setText("Usuario: No logueado");
-        }
-    }
-
-    private boolean solicitarYLoguearEmpleado() {
-        TextInputDialog dialog = new TextInputDialog();
-        dialog.setTitle("Inicio de Sesión");
-        dialog.setHeaderText("Ingrese su nombre de usuario (ej: usuario1001) para iniciar sesión.");
-        dialog.setContentText("Nombre de Usuario:");
-
-        Optional<String> result = dialog.showAndWait();
-
-        if (result.isPresent() && !result.get().trim().isEmpty()) {
-            String nombreUsuarioIngresado = result.get().trim();
-            System.out.println("--- LOG: Intentando LOGIN con Nombre de Usuario: " + nombreUsuarioIngresado + " ---");
-            try {
-                Optional<Usuario> usuarioOpt = gestorInspeccion.buscarUsuarioPorNombre(nombreUsuarioIngresado); // Usamos el Gestor
-
-                if (usuarioOpt.isEmpty()) {
-                    showAlert(Alert.AlertType.ERROR, "Error de Login", "El nombre de usuario no existe. Por favor, intente de nuevo.");
-                    return solicitarYLoguearEmpleado();
-                }
-
-                Usuario usuario = usuarioOpt.get();
-                Empleado empleado = usuario.getEmpleado();
-
-                if (empleado == null) {
-                    showAlert(Alert.AlertType.ERROR, "Error de Configuración", "El usuario existe, pero no tiene un empleado asociado.");
-                    return false;
-                }
-
-                sesion.setUsuarioLogueado(usuario);
-                System.out.println("--- LOG: Sesion creada. Empleado logueado: " + empleado.getNombre() + " ---");
-                return true;
-
-            } catch (Exception e) {
-                showAlert(Alert.AlertType.ERROR, "Error de Login", "Error durante la consulta de usuarios: " + e.getMessage());
-                e.printStackTrace();
-                return false;
-            }
-        }
-        return false;
-    }
-
-// En InterfazInspeccion.java
+    // --- LÓGICA DE CIERRE DE ORDEN (CON MENSAJE DETALLADO) ---
 
     private void iniciarCierreOrdenInspeccion() {
         OrdenDeInspeccion ordenSeleccionada = tablaOrdenes.getSelectionModel().getSelectedItem();
@@ -271,13 +193,12 @@ public class InterfazInspeccion {
             showAlert(Alert.AlertType.WARNING, "Advertencia", "Por favor, seleccione una orden de inspección de la tabla.");
             return;
         }
-        // Solo se pueden cerrar órdenes que estén 'Completamente Realizadas'
         if (!ordenSeleccionada.sosCompletamenteRealizada()) {
             showAlert(Alert.AlertType.ERROR, "Error de Estado", "La orden seleccionada no está 'Completamente Realizada' y no puede ser cerrada.");
             return;
         }
 
-        // --- Paso 1: Solicitar Observación de Cierre (Paso 4 & 5) ---
+        // --- Paso 1: Solicitar Observación de Cierre ---
         Dialog<String> dialogObservacion = new Dialog<>();
         dialogObservacion.setTitle("Cerrar Orden de Inspección");
         dialogObservacion.setHeaderText("Cierre de Orden Nº " + ordenSeleccionada.getNumOrden());
@@ -291,7 +212,7 @@ public class InterfazInspeccion {
         textArea.setPromptText("Observación");
         textArea.setWrapText(true);
         textArea.setPrefRowCount(5);
-        textArea.setPrefColumnCount(30); // Añadido para mejor visualización
+        textArea.setPrefColumnCount(30);
         content.getChildren().addAll(label, textArea);
         dialogObservacion.getDialogPane().setContent(content);
 
@@ -312,24 +233,21 @@ public class InterfazInspeccion {
         }
         String observacion = resultObservacion.get().trim();
 
-        // --- Paso 2: Preguntar por Motivos Fuera de Servicio (Paso 6 & 7) ---
-        // Buscar tipos de motivos disponibles
+        // --- Paso 2: Preguntar por Motivos Fuera de Servicio ---
         List<MotivoTipo> motivosDisponibles = gestorInspeccion.buscarTiposMotivosFueraDeServicios();
         List<MotivoFueraServicio> motivosParaSismografo = mostrarMotivosTiposFueraServicios(motivosDisponibles);
 
-        // Si el usuario cancela el diálogo de motivos
         if (motivosParaSismografo == null) {
             showAlert(Alert.AlertType.INFORMATION, "Información", "Operación de cierre de orden cancelada.");
             return;
         }
 
-        // --- Paso 3: Confirmación Final (Paso 8 & 9) ---
+        // --- Paso 3: Confirmación Final ---
         Alert confirmAlert = new Alert(Alert.AlertType.CONFIRMATION);
         confirmAlert.setTitle("Confirmar Cierre de Orden");
         confirmAlert.setHeaderText("¿Está seguro de cerrar la Orden Nº " + ordenSeleccionada.getNumOrden() + "?");
         String contentConfirmation = "Observación: " + observacion + "\n";
 
-        // (Se requiere java.util.stream.Collectors)
         if (!motivosParaSismografo.isEmpty()) {
             contentConfirmation += "El sismógrafo será puesto FUERA DE SERVICIO con los siguientes motivos:\n" +
                     motivosParaSismografo.stream()
@@ -342,15 +260,34 @@ public class InterfazInspeccion {
 
         Optional<ButtonType> confirmResult = confirmAlert.showAndWait();
 
-        // --- Paso 4: Ejecutar Cierre y Recargar (Paso 11, 12, 13) ---
+        // --- Paso 4: Ejecutar Cierre y Recargar (Mensaje de Éxito Detallado) ---
         if (confirmResult.isPresent() && confirmResult.get() == ButtonType.OK) {
             try {
-                // Llama al Gestor para ejecutar la lógica de negocio (Cerrar Orden, Actualizar Sismógrafo, Notificar)
                 gestorInspeccion.cerrarOrden(ordenSeleccionada.getNumOrden(), observacion, motivosParaSismografo);
 
-                // Recargar la tabla para el empleado que estaba seleccionado (o el logueado)
                 mostrarOrdCompRealizadas(cmbEmpleados.getSelectionModel().getSelectedItem());
-                showAlert(Alert.AlertType.INFORMATION, "Éxito", "Orden de Inspección Nº " + ordenSeleccionada.getNumOrden() + " cerrada exitosamente.");
+
+                String estadoFinal = "CERRADA";
+
+                String mensajeExito = String.format(
+                        "¡Orden cerrada exitosamente!\n\n" +
+                                "Nº Orden: %d\n" +
+                                "Estación: %s\n" +
+                                "Estado Anterior: COMPLETAMENTE REALIZADA\n" +
+                                "Estado Nuevo: %s\n" +
+                                "Observación: %s",
+                        ordenSeleccionada.getNumOrden(),
+                        ordenSeleccionada.getEstacionSismologica().getNombre(),
+                        estadoFinal,
+                        observacion
+                );
+
+                if (!motivosParaSismografo.isEmpty()) {
+                    mensajeExito += "\n\nSISMÓGRAFO PUESTO FUERA DE SERVICIO.";
+                }
+
+                showAlert(Alert.AlertType.INFORMATION, "✅ Orden Cerrada", mensajeExito);
+
             } catch (Exception e) {
                 showAlert(Alert.AlertType.ERROR, "Error al Cerrar Orden", "Ocurrió un error al intentar cerrar la orden: " + e.getMessage());
                 e.printStackTrace();
@@ -359,7 +296,55 @@ public class InterfazInspeccion {
             showAlert(Alert.AlertType.INFORMATION, "Información", "Cierre de orden cancelado.");
         }
     }
-    // En InterfazInspeccion.java
+
+    // --- MÉTODOS DE LOGIN Y AUXILIARES ---
+
+    private void actualizarInfoUsuario() {
+        Empleado empleado = sesion.obtenerEmpleadoLogueado();
+        if (empleado != null) {
+            labelUsuarioLogueado.setText("Usuario: " + empleado.getNombre() + " " + empleado.getApellido() + " (Legajo: " + empleado.getLegajo() + ")");
+        } else {
+            labelUsuarioLogueado.setText("Usuario: No logueado");
+        }
+    }
+
+    private boolean solicitarYLoguearEmpleado() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Inicio de Sesión");
+        dialog.setHeaderText("Ingrese su nombre de usuario (ej: usuario1001) para iniciar sesión.");
+        dialog.setContentText("Nombre de Usuario:");
+
+        Optional<String> result = dialog.showAndWait();
+
+        if (result.isPresent() && !result.get().trim().isEmpty()) {
+            String nombreUsuarioIngresado = result.get().trim();
+            try {
+                Optional<Usuario> usuarioOpt = gestorInspeccion.buscarUsuarioPorNombre(nombreUsuarioIngresado);
+
+                if (usuarioOpt.isEmpty()) {
+                    showAlert(Alert.AlertType.ERROR, "Error de Login", "El nombre de usuario no existe. Por favor, intente de nuevo.");
+                    return solicitarYLoguearEmpleado();
+                }
+
+                Usuario usuario = usuarioOpt.get();
+                Empleado empleado = usuario.getEmpleado();
+
+                if (empleado == null) {
+                    showAlert(Alert.AlertType.ERROR, "Error de Configuración", "El usuario existe, pero no tiene un empleado asociado.");
+                    return false;
+                }
+
+                sesion.setUsuarioLogueado(usuario);
+                return true;
+
+            } catch (Exception e) {
+                showAlert(Alert.AlertType.ERROR, "Error de Login", "Error durante la consulta de usuarios: " + e.getMessage());
+                e.printStackTrace();
+                return false;
+            }
+        }
+        return false;
+    }
 
     private List<MotivoFueraServicio> mostrarMotivosTiposFueraServicios(List<MotivoTipo> motivosDisponibles) {
         Stage dialogStage = new Stage();
@@ -377,7 +362,6 @@ public class InterfazInspeccion {
         motivosGrid.setVgap(5);
         motivosGrid.setPadding(new Insets(10, 0, 0, 0));
 
-        // Necesitas una lista para guardar los wrappers (MotivoTipo, Checkbox, Textfield)
         List<MotivoTipoWrapper> motivoWrappers = new ArrayList<>();
 
         int row = 0;
@@ -396,7 +380,6 @@ public class InterfazInspeccion {
         }
         motivosGrid.setDisable(true);
 
-        // Listener para habilitar/deshabilitar la grilla completa
         chkPonerFueraServicio.selectedProperty().addListener((obs, oldVal, newVal) -> {
             motivosGrid.setDisable(!newVal);
             if (!newVal) {
@@ -410,14 +393,13 @@ public class InterfazInspeccion {
         Button btnAceptar = new Button("Aceptar");
         Button btnCancelar = new Button("Cancelar");
 
-        java.util.concurrent.atomic.AtomicReference<List<MotivoFueraServicio>> resultMotivos = new java.util.concurrent.atomic.AtomicReference<>(new ArrayList<>());
+        AtomicReference<List<MotivoFueraServicio>> resultMotivos = new AtomicReference<>(new ArrayList<>());
         btnAceptar.setOnAction(e -> {
             if (chkPonerFueraServicio.isSelected()) {
                 boolean alMenosUnMotivoSeleccionado = false;
                 for (MotivoTipoWrapper mw : motivoWrappers) {
                     if (mw.getCheckBox().isSelected()) {
                         alMenosUnMotivoSeleccionado = true;
-                        // Asegúrate de que MotivoFueraServicio se pueda construir con (comentario, motivoTipo)
                         resultMotivos.get().add(new MotivoFueraServicio(mw.getTextField().getText().trim(), mw.getMotivoTipo()));
                     }
                 }
@@ -431,7 +413,7 @@ public class InterfazInspeccion {
         });
 
         btnCancelar.setOnAction(e -> {
-            resultMotivos.set(null); // Usamos null para indicar cancelación
+            resultMotivos.set(null);
             dialogStage.close();
         });
 
@@ -444,8 +426,9 @@ public class InterfazInspeccion {
         dialogStage.setScene(dialogScene);
         dialogStage.showAndWait();
 
-        return resultMotivos.get(); // Retorna la lista de motivos o null si se canceló
+        return resultMotivos.get();
     }
+
     private void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);
         alert.setTitle(title);
