@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +37,9 @@ public class Sismografo {
     @JoinColumn(name = "estado_actual_id")
     private Estado estadoActual;
 
+    // Relación que gestiona la FK 'sismografo_id' en la tabla 'cambio_estado'
+    // La entidad CambioEstado ya no tiene el campo Sismografo, pero el mapeo ocurre aquí
+    // NOTA: 'mappedBy' requiere que CambioEstado tenga un campo 'sismografo'. Mantendremos la firma, asumiendo que el campo @Transient en CambioEstado se usa para la persistencia inversa.
     @OneToMany(mappedBy = "sismografo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CambioEstado> cambiosDeEstados = new ArrayList<>();
 
@@ -61,7 +65,6 @@ public class Sismografo {
 
     /**
      * Mueve el sismógrafo al estado FUERA DE SERVICIO, registra los motivos y el CambioEstado.
-     * Este método recibe el Empleado y la entidad Estado PERSISTENTE del Gestor.
      */
     public void marcarFueraDeServicio(List<MotivoFueraServicio> motivosSeleccionados, Empleado empleadoRI, Estado estadoFueraDeServicio) {
 
@@ -73,25 +76,24 @@ public class Sismografo {
             cambioActual.cerrarCambio();
         }
 
-        // 2. Crear el nuevo CambioEstado DIRECTAMENTE
-        // Usamos la entidad 'estadoFueraDeServicio' que YA FUE BUSCADA del repositorio.
+        // 2. Crear el nuevo CambioEstado (Usando la entidad Estado persistente)
         CambioEstado nuevoCambio = new CambioEstado(
                 empleadoRI,
                 estadoAnterior,
-                estadoFueraDeServicio, // Usamos la entidad persistente para evitar TransientPropertyValueException
-                OffsetDateTime.now(),
+                estadoFueraDeServicio,
+                OffsetDateTime.now(ZoneOffset.of("-03:00")),
                 null,
                 motivosSeleccionados
         );
 
-        // 3. Asociar Motivos al NUEVO CAMBIO DE ESTADO
+        // 3. Asociar Motivos al NUEVO CAMBIO DE ESTADO (MotivoFueraServicio.cambioEstado_id)
         if (motivosSeleccionados != null) {
             for (MotivoFueraServicio motivo : motivosSeleccionados) {
                 motivo.setCambioEstado(nuevoCambio);
             }
         }
 
-        // 4. Registrar el nuevo cambio de estado
+        // 4. Registrar el nuevo cambio de estado (Bidireccionalidad)
         this.agregarCambioEstado(nuevoCambio);
 
         // 5. Actualizar estado actual de la entidad Sismografo
@@ -109,10 +111,15 @@ public class Sismografo {
         return cambioActual != null ? cambioActual.getEstadoNuevo() : null;
     }
 
+    /**
+     * Agrega el cambio de estado, estableciendo la referencia bidireccional.
+     * Esta es la línea crucial que persiste la FK 'sismografo_id' en la tabla 'cambio_estado'.
+     */
     public void agregarCambioEstado(CambioEstado cambio) {
         if (this.cambiosDeEstados == null) {
             this.cambiosDeEstados = new ArrayList<>();
         }
+        // NECESARIO para que la columna sismografo_id se guarde en la tabla cambio_estado.
         cambio.setSismografo(this);
         this.cambiosDeEstados.add(cambio);
     }

@@ -55,6 +55,11 @@ public class GestorInspeccion implements ISujetoInspeccion {
         }
     }
 
+    @Override
+    public void quitar(IObservadorInspeccion observador) {
+
+    }
+
     // --- LÓGICA DE CIERRE (Método central) ---
 
     /**
@@ -108,11 +113,8 @@ public class GestorInspeccion implements ISujetoInspeccion {
 
         repoOrdenes.insertar(orden);
 
-        // 13) ENVÍO DE NOTIFICACIONES (Punto final del Diagrama de Secuencia)
-
-        // --- PREPARAR DATOS SIN STREAMS (FOR loops) ---
+        // ENVÍO DE NOTIFICACIONES
         List<String> mailsSimulados = List.of("reparacion1@empresa.com", "reparacion2@empresa.com");
-
         List<String> motivosDesc = new ArrayList<>();
         List<String> comentarios = new ArrayList<>();
 
@@ -126,12 +128,10 @@ public class GestorInspeccion implements ISujetoInspeccion {
                 }
             }
         }
-        // --- LLAMADA AL SUJETO (notificar) ---
         notificar(orden, "CERRADA", motivosDesc, comentarios, mailsSimulados);
     }
 
-    // --- MÉTODOS DE BÚSQUEDA Y AUXILIARES ---
-
+    //MÉTODOS AUXILIARES
     @Transactional(readOnly = true)
     public Optional<Usuario> buscarUsuarioPorNombre(String nombreUsuario) {
         Optional<Usuario> usuarioOpt = repoUsuarios.findByNombreUsuario(nombreUsuario);
@@ -189,7 +189,6 @@ public class GestorInspeccion implements ISujetoInspeccion {
     private Optional<OrdenDeInspeccion> buscarOrdenDeInspeccion(Long numeroOrden) {
         return Optional.ofNullable(repoOrdenes.buscarOrdenDeInspeccion(numeroOrden));
     }
-    // En dsi.ppai.services.GestorInspeccion.java
 
 // ... (dentro de la clase GestorInspeccion)
 

@@ -26,10 +26,11 @@ public class OrdenDeInspeccion {
     @JoinColumn(name = "estacion_sismologica_id")
     private EstacionSismologica estacionSismologica;
     private LocalDateTime fechaHoraFinalizacion;
-    @OneToMany(mappedBy = "ordenInspeccion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CambioEstado> cambios; // Esto es una colección de entidades relacionadas
 
-    // ...    @Id
+    // MappedBy requiere que CambioEstado tenga el campo 'ordenInspeccion'
+    @OneToMany(mappedBy = "ordenInspeccion", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<CambioEstado> cambios;
+
     @Id
     private Long id;
 
@@ -45,7 +46,7 @@ public class OrdenDeInspeccion {
         this.estado = estado;
         this.estacionSismologica = estacionSismologica;
         this.fechaHoraFinalizacion = fechaHoraFinalizacion;
-        this.cambios = new ArrayList<>(); // Inicializar la lista de cambios
+        this.cambios = new ArrayList<>();
     }
 
     public boolean sosCompletamenteRealizada() {
@@ -57,11 +58,19 @@ public class OrdenDeInspeccion {
                 this.empleado.getLegajo().equals(empleado.getLegajo());
     }
 
+    /**
+     * Registra un nuevo CambioEstado y establece la relación bidireccional.
+     */
     public void registrarCambioEstado(CambioEstado cambio) {
         if (this.cambios == null) {
             this.cambios = new ArrayList<>();
         }
+
+        // --- CORRECCIÓN CRUCIAL ---
+        // Establece la referencia inversa (FK) en el objeto CambioEstado
+        cambio.setOrdenInspeccion(this);
+        // -------------------------
+
         this.cambios.add(cambio);
     }
-
 }

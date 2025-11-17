@@ -15,8 +15,6 @@ public class MonitorCCRS implements IObservadorInspeccion {
     private String estado;
     private LocalDate fecha;
 
-    // --- CONSTRUCTOR VACÍO AÑADIDO ---
-    // Este constructor permite que Spring (y otras clases) creen la instancia sin argumentos.
     public MonitorCCRS() {
         // Inicialización simple para el monitoreo
         System.out.println("Monitor CCRS creado (ID: " + this.idMonitor + ").");
@@ -31,7 +29,7 @@ public class MonitorCCRS implements IObservadorInspeccion {
 
     @Override
     public void actualizar(int ident, String estado, LocalDate fecha, LocalTime hora, List<String> motivos, List<String> comentarios, List<String> mails) {
-        System.out.println("🖥️ MONITOR CCRS [" + this.idMonitor + "]: Recibiendo actualización por Orden N° " + ident);
+        System.out.println("MONITOR CCRS [" + this.idMonitor + "]: Recibiendo actualización por Orden N° " + ident);
 
         // Simulación de los métodos del diagrama de secuencia
         buscarSismografo(ident);
@@ -48,7 +46,7 @@ public class MonitorCCRS implements IObservadorInspeccion {
     private void buscarSismografo(int ident) { System.out.println("      -> Buscando Sismógrafo asociado a Orden " + ident); }
     private void setEstadoSismografo(String estado) { this.estado = estado; }
     private void setFecha(LocalDate fecha) { this.fecha = fecha; }
-    private void setHora(LocalTime hora) { /* Lógica pendiente */ }
-    private void setMotivos(List<String> motivos) { /* Lógica pendiente */ }
-    private void setComentarios(List<String> comentarios) { /* Lógica pendiente */ }
+    private void setHora(LocalTime hora) {}
+    private void setMotivos(List<String> motivos) {}
+    private void setComentarios(List<String> comentarios) {}
 }

@@ -1,13 +1,25 @@
 package dsi.ppai.entities;
 
+import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Component;
 
 @Component
+@Table(name = "sesion")
 @NoArgsConstructor
 @Data
 public class Sesion {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+    @OneToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "id",
+            nullable = false,
+            unique = true,
+            foreignKey = @ForeignKey(name = "fk_sesion_usuario")
+    )
     private Usuario usuarioLogueado;
 
     public Sesion(Usuario usuario) {
@@ -18,19 +30,10 @@ public class Sesion {
         this.usuarioLogueado = usuario;
     }
 
-    /**
-     * Obtiene el Empleado asociado al usuario logueado.
-     * * CORRECCIÓN: Devuelve null si no hay un usuario logueado en lugar
-     * de lanzar una excepción. Esto permite a la Interfaz de Inspección
-     * verificar la sesión sin fallar.
-     *
-     * @return El Empleado asociado o null si no hay un usuario logueado.
-     */
     public Empleado obtenerEmpleadoLogueado() {
         if (usuarioLogueado == null) {
             return null; // <--- CAMBIO CRUCIAL: Devuelve null en lugar de lanzar excepción
         }
-        // Asumiendo que usuarioLogueado.obtenerEmpleado() nunca devuelve null si usuarioLogueado no lo es.
         return usuarioLogueado.obtenerEmpleado();
     }
 }

@@ -12,3 +12,4 @@ public interface RepositorioEstaciones extends JpaRepository<EstacionSismologica
     Optional<EstacionSismologica> findByCodigoEstacion(String codigoEstacion);
 }
 
+

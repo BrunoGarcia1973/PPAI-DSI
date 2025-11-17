@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,39 +19,45 @@ public class CambioEstado {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(name = "ambito", nullable = false)
     private Estado.AmbitoEstado ambito;
-    
+
+    // --- RELACIÓN RESTAURADA 1: Sismografo ---
+    // ESTO DEBE EXISTIR para que Sismografo.cambiosDeEstados compile (mappedBy="sismografo")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sismografo_id")
     private Sismografo sismografo;
-    
+
+    // --- RELACIÓN RESTAURADA 2: OrdenDeInspeccion ---
+    // Esto ya lo restauraste y es lo que Hibernate espera para el mappedBy="ordenInspeccion"
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "orden_inspeccion_id")
     private OrdenDeInspeccion ordenInspeccion;
-    
+
+    // El estado nuevo SÍ debe existir como FK
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estado_id", nullable = false)
     private Estado estadoNuevo;
-    
+
     @Column(name = "fecha_hora_inicio", nullable = false)
     private OffsetDateTime fechaHoraInicio;
-    
+
     @Column(name = "fecha_hora_fin")
     private OffsetDateTime fechaHoraFin;
-    
+
+    // RELACIÓN CLAVE (Motivos)
     @OneToMany(mappedBy = "cambioEstado", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MotivoFueraServicio> motivosSeleccionados = new ArrayList<>();
-    
-    @Transient
-    private Empleado empleado; // No está directamente en la tabla, puede obtenerse de otra manera
-    
-    @Transient
-    private Estado estadoAnterior; // Campo calculado o transitorio
 
-    // Constructor principal usado por entidades y DatosInicialesService
+    @Transient
+    private Empleado empleado; // Transitorio
+
+    @Transient
+    private Estado estadoAnterior; // Transitorio
+
+    // Constructor principal usado por entidades
     public CambioEstado(Empleado empleado, Estado estadoAnterior, Estado estadoNuevo, OffsetDateTime fechaHoraInicio, OffsetDateTime fechaHoraFin, List<MotivoFueraServicio> motivosSeleccionados) {
         this.empleado = empleado;
         this.estadoAnterior = estadoAnterior;
@@ -63,28 +70,11 @@ public class CambioEstado {
         }
     }
 
-    public static CambioEstado createFueraDeServicio(
-            Empleado empleado,
-            Estado estadoAnterior,
-            List<MotivoFueraServicio> motivosFueraServicio
-    ) {
-        Estado estadoFueraDeServicio = new Estado("FUERA_DE_SERVICIO");
-        estadoFueraDeServicio.setAmbito(Estado.AmbitoEstado.SISMOGRAFO);
-        return new CambioEstado(
-                empleado,
-                estadoAnterior,
-                estadoFueraDeServicio,
-                OffsetDateTime.now(),
-                null,
-                motivosFueraServicio
-        );
-    }
-
     public boolean esEstadoActual() {
         return this.fechaHoraFin == null;
     }
 
     public void cerrarCambio() {
-        this.fechaHoraFin = OffsetDateTime.now();
+        this.fechaHoraFin = OffsetDateTime.now(ZoneOffset.of("-03:00"));
     }
 }
