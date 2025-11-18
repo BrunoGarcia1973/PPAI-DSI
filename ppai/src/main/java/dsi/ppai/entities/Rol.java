@@ -24,9 +24,6 @@ public class Rol {
     @Column(name = "descripcion_rol")
     private String descripcion;
 
-    // AÑADIR ESTO: Relación inversa ManyToMany
-    @ManyToMany(mappedBy = "roles") // 'roles' debe coincidir con el nombre de la variable en Usuario.java
+    @ManyToMany(mappedBy = "roles")
     private Set<Usuario> usuarios = new HashSet<>();
-
-    // ... (restos de constructores)
 }

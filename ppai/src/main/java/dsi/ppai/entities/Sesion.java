@@ -32,7 +32,7 @@ public class Sesion {
 
     public Empleado obtenerEmpleadoLogueado() {
         if (usuarioLogueado == null) {
-            return null; // <--- CAMBIO CRUCIAL: Devuelve null en lugar de lanzar excepción
+            return null;
         }
         return usuarioLogueado.obtenerEmpleado();
     }

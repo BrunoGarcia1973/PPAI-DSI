@@ -16,7 +16,6 @@ public interface RepositorioSismografos extends JpaRepository<Sismografo, Long> 
     
     List<Sismografo> findByEstacionSismologicaEstacionId(Long estacionId);
     
-    // Métodos de compatibilidad con código existente
     default void guardar(Sismografo sismografo) {
         save(sismografo);
     }

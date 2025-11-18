@@ -42,18 +42,10 @@ public class EstacionSismologica {
     @Column(name = "fecha_solicitud_certificado")
     private LocalDate fechaSolicitudCertificacion;
 
-    // Relación Uno a Muchos con Sismografos (Cargada EAGERLY para simplificar la interfaz)
     @OneToMany(mappedBy = "estacionSismologica", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Sismografo> sismografos = new ArrayList<>();
 
-    // Nota: El campo @Transient 'sismografo' ha sido eliminado, ya que el método lo maneja.
-
-    /**
-     * Método auxiliar requerido por GestorInspeccion.cerrarOrden
-     * para obtener la instancia de Sismógrafo principal de la estación.
-     */
     public Sismografo getSismografo() {
-        // Devuelve el primer sismógrafo de la lista (asumiendo que es el activo/principal)
         if (sismografos != null && !sismografos.isEmpty()) {
             return sismografos.get(0);
         }

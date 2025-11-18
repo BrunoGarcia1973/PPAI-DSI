@@ -24,19 +24,14 @@ public class CambioEstado {
     @Column(name = "ambito", nullable = false)
     private Estado.AmbitoEstado ambito;
 
-    // --- RELACIÓN RESTAURADA 1: Sismografo ---
-    // ESTO DEBE EXISTIR para que Sismografo.cambiosDeEstados compile (mappedBy="sismografo")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sismografo_id")
     private Sismografo sismografo;
 
-    // --- RELACIÓN RESTAURADA 2: OrdenDeInspeccion ---
-    // Esto ya lo restauraste y es lo que Hibernate espera para el mappedBy="ordenInspeccion"
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "orden_inspeccion_id")
     private OrdenDeInspeccion ordenInspeccion;
 
-    // El estado nuevo SÍ debe existir como FK
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estado_id", nullable = false)
     private Estado estadoNuevo;
@@ -47,17 +42,15 @@ public class CambioEstado {
     @Column(name = "fecha_hora_fin")
     private OffsetDateTime fechaHoraFin;
 
-    // RELACIÓN CLAVE (Motivos)
     @OneToMany(mappedBy = "cambioEstado", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MotivoFueraServicio> motivosSeleccionados = new ArrayList<>();
 
     @Transient
-    private Empleado empleado; // Transitorio
+    private Empleado empleado;
 
     @Transient
-    private Estado estadoAnterior; // Transitorio
+    private Estado estadoAnterior;
 
-    // Constructor principal usado por entidades
     public CambioEstado(Empleado empleado, Estado estadoAnterior, Estado estadoNuevo, OffsetDateTime fechaHoraInicio, OffsetDateTime fechaHoraFin, List<MotivoFueraServicio> motivosSeleccionados) {
         this.empleado = empleado;
         this.estadoAnterior = estadoAnterior;

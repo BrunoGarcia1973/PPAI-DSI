@@ -15,13 +15,6 @@ public interface RepositorioOrdenes extends JpaRepository<OrdenDeInspeccion, Lon
     // Método para buscar por el atributo 'numOrden' (el número visible)
     Optional<OrdenDeInspeccion> findByNumOrden(Long numOrden);
 
-    // --- CONSULTAS PERSONALIZADAS ---
-
-    /**
-     * Método que busca una Orden por su número visible (numOrden) y carga todas las relaciones
-     * (Estado, EstacionSismologica y su Sismografo) para evitar LazyInitializationException
-     * durante el cierre de orden.
-     */
     @Query("SELECT o FROM OrdenDeInspeccion o " +
             "JOIN FETCH o.empleado e " +
             "JOIN FETCH o.estado s " +

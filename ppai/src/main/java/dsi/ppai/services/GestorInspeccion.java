@@ -1,6 +1,7 @@
 package dsi.ppai.services;
 
 import dsi.ppai.entities.*;
+import dsi.ppai.repositories.RepositorioEmpleados;
 import dsi.ppai.repositories.RepositorioEstados;
 import dsi.ppai.repositories.RepositorioMotivoTipo;
 import dsi.ppai.repositories.RepositorioOrdenes;
@@ -10,7 +11,6 @@ import dsi.ppai.Interfaces.IObservadorInspeccion;
 import dsi.ppai.Interfaces.ISujetoInspeccion;
 
 import lombok.Data;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +20,6 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 @Data
 public class GestorInspeccion implements ISujetoInspeccion {
 
@@ -30,14 +29,34 @@ public class GestorInspeccion implements ISujetoInspeccion {
     private final RepositorioMotivoTipo repoMotivos;
     private final RepositorioUsuarios repoUsuarios;
     private final RepositorioSismografos repoSismografos;
+    private final RepositorioEmpleados repoEmpleados;
     private final List<IObservadorInspeccion> observadores;
+
+    public GestorInspeccion(RepositorioOrdenes repoOrdenes, RepositorioEstados repoEstados, 
+                           Sesion sesion, RepositorioMotivoTipo repoMotivos, 
+                           RepositorioUsuarios repoUsuarios, RepositorioSismografos repoSismografos,
+                           RepositorioEmpleados repoEmpleados) {
+        this.repoOrdenes = repoOrdenes;
+        this.repoEstados = repoEstados;
+        this.sesion = sesion;
+        this.repoMotivos = repoMotivos;
+        this.repoUsuarios = repoUsuarios;
+        this.repoSismografos = repoSismografos;
+        this.repoEmpleados = repoEmpleados;
+        this.observadores = new java.util.ArrayList<>();
+        
+        // Suscribir observadores al inicializar el Gestor
+        this.suscribir(Arrays.asList(new NotificacionEmpleados(repoEmpleados)));
+    }
 
 
     // --- IMPLEMENTACIÓN DEL SUJETO (Observer) ---
     @Override
-    public void suscribir(IObservadorInspeccion observador) {
-        if (!observadores.contains(observador)) {
-            observadores.add(observador);
+    public void suscribir(List<IObservadorInspeccion> nuevosObservadores) {
+        for (IObservadorInspeccion observador : nuevosObservadores) {
+            if (!observadores.contains(observador)) {
+                observadores.add(observador);
+            }
         }
     }
 
@@ -54,9 +73,9 @@ public class GestorInspeccion implements ISujetoInspeccion {
         }
     }
 
-    @Override
-    public void quitar(IObservadorInspeccion observador) {
-    }
+    //@Override
+    //public void quitar(IObservadorInspeccion observador) {
+    //}
 
     // --- LÓGICA DE CIERRE ---
     @Transactional
@@ -180,20 +199,8 @@ public class GestorInspeccion implements ISujetoInspeccion {
         return Optional.ofNullable(repoOrdenes.buscarOrdenDeInspeccion(numeroOrden));
     }
 
-// ... (dentro de la clase GestorInspeccion)
-
     public List<MotivoTipo> buscarTiposMotivosFueraDeServicios() {
-        // Asumo que tienes un repositorio para MotivoTipo que realiza esta búsqueda.
-        // Si no tienes lógica compleja, simplemente llama al repositorio.
-        // Ejemplo:
-        // return repoMotivos.findAll();
 
-        // Si tienes un método específico para esta tarea en el repositorio:
-        // return repoMotivos.buscarMotivosDisponibles();
-
-        // Por ahora, para resolver el error de compilación:
         return repoMotivos.findAll();
     }
-
-// ...
 }

@@ -25,14 +25,10 @@ public interface RepositorioEmpleados extends JpaRepository<Empleado, Long> {
     }
     
     // Método para buscar responsables de inspección
-    // Consulta basada en la relación Empleado -> Usuario -> Rol
     @Query("SELECT DISTINCT e FROM Empleado e JOIN e.usuarios u JOIN u.roles r WHERE r.nombre = 'RESPONSABLE_DE_INSPECCION'")
     List<Empleado> findResponsablesDeInspeccion();
     
-    // Método de compatibilidad
     default List<Empleado> buscarResponsablesDeInspeccion() {
-        // Por ahora retornamos todos los empleados que tengan rol de responsable
-        // Esto se puede mejorar consultando la relación Usuario -> Rol
         return findResponsablesDeInspeccion();
     }
 }

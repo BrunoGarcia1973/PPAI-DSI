@@ -22,9 +22,8 @@ public class PpaiApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        // Obtener el bean de ApplicationUI del contexto de Spring
         InterfazInspeccion interfazInspeccion = applicationContext.getBean(InterfazInspeccion.class);
-        interfazInspeccion.start(primaryStage); // Iniciar la UI de JavaFX
+        interfazInspeccion.start(primaryStage); 
     }
 
     @Override
