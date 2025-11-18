@@ -33,8 +33,7 @@ public class GestorInspeccion implements ISujetoInspeccion {
     private final List<IObservadorInspeccion> observadores;
 
 
-    // --- IMPLEMENTACIÓN DEL SUJETO OBSERVABLE (Observer) ---
-
+    // --- IMPLEMENTACIÓN DEL SUJETO (Observer) ---
     @Override
     public void suscribir(IObservadorInspeccion observador) {
         if (!observadores.contains(observador)) {
@@ -57,19 +56,11 @@ public class GestorInspeccion implements ISujetoInspeccion {
 
     @Override
     public void quitar(IObservadorInspeccion observador) {
-
     }
 
-    // --- LÓGICA DE CIERRE (Método central) ---
-
-    /**
-     * [Paso 1 - 13] Ejecuta la lógica completa para cerrar una Orden de Inspección.
-     */
+    // --- LÓGICA DE CIERRE ---
     @Transactional
-    public void cerrarOrden(Long numeroOrden,
-                            String observacion,
-                            List<MotivoFueraServicio> motivosSeleccionados) {
-
+    public void cerrarOrden(Long numeroOrden, String observacion, List<MotivoFueraServicio> motivosSeleccionados) {
         Empleado empleado = sesion.obtenerEmpleadoLogueado();
         if (empleado == null) {
             throw new IllegalStateException("No hay Responsable de Inspección logueado en la sesión.");
@@ -82,8 +73,7 @@ public class GestorInspeccion implements ISujetoInspeccion {
         }
 
         OrdenDeInspeccion orden = ordenOpt.get();
-
-        // Validaciones (Se mantienen)
+        // Validaciones
         if (!orden.sosDeEmpleado(empleado)) { throw new IllegalStateException("La orden no pertenece al empleado logueado."); }
         if (!orden.sosCompletamenteRealizada()) { throw new IllegalStateException("La orden no está totalmente realizada y no puede ser cerrada."); }
         if (observacion == null || observacion.isBlank()) { throw new IllegalArgumentException("Debe ingresar una observación para el cierre."); }

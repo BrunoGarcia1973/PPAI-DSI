@@ -68,13 +68,7 @@ public class InterfazInspeccion {
         topBox.setPadding(new Insets(5));
         topBox.setAlignment(Pos.CENTER_LEFT);
 
-        HBox filterBox = new HBox(10);
-        cmbEmpleados = new ComboBox<>();
-        cmbEmpleados.valueProperty().addListener((obs, oldVal, newVal) -> mostrarOrdCompRealizadas(newVal));
-
-        filterBox.getChildren().addAll(new Label("Ver órdenes de:"), cmbEmpleados);
-        VBox topCombinedBox = new VBox(5, topBox, filterBox);
-        root.setTop(topCombinedBox);
+        root.setTop(topBox);
 
         tablaOrdenes = new TableView<>();
         setupTablaOrdenes();
@@ -265,7 +259,7 @@ public class InterfazInspeccion {
             try {
                 gestorInspeccion.cerrarOrden(ordenSeleccionada.getNumOrden(), observacion, motivosParaSismografo);
 
-                mostrarOrdCompRealizadas(cmbEmpleados.getSelectionModel().getSelectedItem());
+                mostrarOrdCompRealizadas(null);
 
                 String estadoFinal = "CERRADA";
 

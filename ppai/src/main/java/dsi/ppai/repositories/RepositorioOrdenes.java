@@ -32,7 +32,9 @@ public interface RepositorioOrdenes extends JpaRepository<OrdenDeInspeccion, Lon
 
 
     // Métodos de búsqueda para el listado inicial (filtrado por ID de Empleado y ID de Estado)
-    List<OrdenDeInspeccion> findByEmpleado_IdAndEstado_Id(Long empleadoId, Long estadoId);
+    @Query("SELECT o FROM OrdenDeInspeccion o " +
+           "WHERE o.empleado.id = :empleadoId AND o.estado.id = :estadoId")
+    List<OrdenDeInspeccion> findByEmpleado_IdAndEstado_Id(@Param("empleadoId") Long empleadoId, @Param("estadoId") Long estadoId);
 
 
     // --- MÉTODOS DE COMPATIBILIDAD (Ajustados) ---
